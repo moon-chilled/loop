@@ -49,7 +49,7 @@
   ;;; Compute the bindings.
   
   (initial-bindings (clause)
-    (apply append (map (lambda (x) (format #t "T ~a~%" (x 'class-name)) (initial-bindings x)) (clause 'subclauses))))
+    (apply append (map initial-bindings (clause 'subclauses))))
   
   (final-bindings (clause)
     (apply append (map final-bindings (clause 'subclauses))))

@@ -37,7 +37,7 @@
 ;(load "never-clause.scm")
 ;(load "thereis-clause.scm")
 (load "for-as-clause.scm")
-;(load "for-as-arithmetic-clause.scm")
+(load "for-as-arithmetic-clause.scm")
 ;(load "for-as-list-clause.scm")
 (load "for-as-equals-then-clause.scm")
 ;(load "for-as-across-clause.scm")
@@ -56,3 +56,4 @@
 ;(macroexpand (loop for x = 5 and y = 7 and z = 14 while (< x 20) do (set! x (+ 1 x)) collect x))
 ;(format #t "~a~%" (let ((x 5)) (loop for y = 7 and z = 14 and q = 21 while (> x 0) do (format #t "~a / ~a / ~a / ~a~%" x y z q) (set! x (- x 1)))))
 ;(loop for x = 5 then (+ 1 x) and ((y) . z) = '((1) . 2) while (< x 20) do (format #t "~a/~a~%" x z))
+(display (loop for x below 10 by 2 collect x))
