@@ -6,7 +6,7 @@
   ;;; Compute the body-form
   
   (body-form (clause end-tag)
-    `(unless ,(form clause)
+    `(unless ,(clause 'form)
        (,end-tag))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

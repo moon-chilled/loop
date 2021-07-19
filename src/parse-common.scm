@@ -50,8 +50,8 @@
 ;;; forms.
 
 (define-parser compound+
-  (repeat+ (lambda forms
-             (cons 'progn forms))
+  (repeat+ (lambda (forms)
+             (cons 'begin forms))
            (singleton identity pair?)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

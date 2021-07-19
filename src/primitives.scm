@@ -71,19 +71,15 @@
          ,@body))))
 
 ; simple stub generics implementation (single dispatch only)
-; (defgeneric m (x y z))  will define a function 'm' that expects 'x' to be a
-; let containing a bound lambda 'm'; y and z will be passed to that lambda
-;
-; (defgeneric* m (x y z) body) is similar, except that if the binding is
-; missing, body will be evaluated instead
-(define-expansion (defgeneric name pspec)
-  `(define (,name ,@pspec)
-     ((,(car pspec) ',name) ,@pspec)))
+; (defgeneric m (x y z) body*)  will define a function 'm' that expects 'x' to
+; be a let containing a bound lambda 'm'; y and z will be passed to that
+; lambda.  If 'm' is not bound, body will be evaluated instead.  If body is
+; nil, an error will be signaled
 
-(define-expansion (defgeneric* name pspec . body)
+(define-expansion (defgeneric name pspec . body)
   `(define (,name ,@pspec)
-     (if (undefined? (,(car pspec) ',name))
-       (begin ,@body)
+     (if (eq? ,name (,(car pspec) ',name))
+       ,(if (null? body) `(error ,(format #f "No method ~a bound" name)) `(begin ,@body))
        ((,(car pspec) ',name) ,@pspec))))
 
 (define *classes* (make-hash-table 8 eq?))
@@ -112,18 +108,22 @@
                       (cons (reverse parm) (reverse bindings))))
          (all-slots (remove-duplicates-from-end `(,@auxiliary-slots ,@slots) (compose eq? car)))
          (all-methods (remove-duplicates-from-end `(,@auxiliary-methods ,@accessor-methods ,@methods) (compose eq? car))))
+    ; turns ((a b) (x y)) into ('a b 'x y)
+    (define (flatten-bindlist x)
+      (apply append (map (lambda (x) (cons `',(car x) (cdr x))) x)))
     ; for some reason returning multiple values here doesn't work?
     `(with-let (rootlet)
        (set! (*classes* ',name)
-             (let ((all-slots ',all-slots)
-                   (all-methods ',all-methods)
-                   (class-name ',name)
-                   (class-of #f)
-                   (make (lambda* ,(car parm.bind)
-                           (let (,@(cdr parm.bind)
+             (inlet 'all-slots ',all-slots
+                    'all-methods ',all-methods
+                    'class-name ',name
+                    'class-of #f
+                    'make (lambda* ,(car parm.bind)
+                            (let ((class-of (*classes* ',name))
+                                  (class-name ',name)
+                                  ,@(cdr parm.bind)
                                   ,@all-methods)
-                             (curlet)))))
-               (curlet)))
+                              (curlet)))))
        (set! ((*classes* ',name) 'class-of) (*classes* ',name))
       ,(let ((p (gensym)))
          `(define (,(string->symbol (format #f "make-~a" name)) . ,p)

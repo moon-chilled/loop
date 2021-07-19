@@ -33,25 +33,25 @@
                 '())
               (loop (cdr unique)))))))))
 
+(define *clause* #f)
 (define (prologue-body-epilogue clauses end-tag)
   (let ((start-tag (gensym)))
     (transform-tagbody
         `((begin ,@(map (lambda (clause)
-                          (format #t "exp~%")
-                             (prologue-form clause end-tag))
-                           clauses))
+                          (prologue-form clause end-tag))
+                        clauses))
           ,start-tag
           (begin ,@(map (lambda (clause)
-                             (body-form clause end-tag))
-                           clauses))
+                          (body-form clause end-tag))
+                        clauses))
           (begin ,@(map (lambda (clause)
-                             (termination-form clause end-tag))
-                           clauses))
+                          (termination-form clause end-tag))
+                        clauses))
           (begin ,@(map step-form clauses))
           (,start-tag)
           ,end-tag
           (begin ,@(map epilogue-form clauses)
-                 (*loop-return-sym*
+                 (,*loop-return-sym*
                    ,*accumulation-variable*))))))
 
 ;;; Process all clauses by first computing the prologue, the body, and
@@ -68,7 +68,7 @@
   (let ((acc (accumulation-bindings all-clauses)))
     `(let (,@(if (member *accumulation-variable* (map car acc))
                  '()
-                 `((,*accumulation-variable* nil)))
+                 `((,*accumulation-variable* '()))) ;*accumulation-variable* was nil originally; is '() right?
            ,@acc)
        ,(do-clauses all-clauses end-tag))))
 
@@ -95,6 +95,6 @@
              (lambda (return)
                (call-with-exit
                  (lambda (,*loop-return-sym*)
-                   ,@(expand-clauses clauses end-tag)))))))))
+                   ,(expand-clauses clauses end-tag)))))))))
 
 (define (analyze-clauses clauses) ()) ;todo analysis.scm

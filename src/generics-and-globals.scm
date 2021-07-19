@@ -18,16 +18,16 @@
 ;;; declaration specifiers from the clause.  Notice that it is a list
 ;;; of declaration specifiers, not a list of declarations.  In other
 ;;; words, the symbol DECLARE is omitted.
-(defgeneric* declarations (clause)
+(defgeneric declarations (clause)
   '())
 
-(defgeneric* initial-bindings (clause)
+(defgeneric initial-bindings (clause)
   '())
 
-(defgeneric* final-bindings (clause)
+(defgeneric final-bindings (clause)
   '())
 
-(defgeneric* bindings (clause)
+(defgeneric bindings (clause)
   (append (initial-bindings clause) (final-bindings clause)))
 
 ;;; This generic function returns a form for CLAUSE that should go in
@@ -37,7 +37,7 @@
 ;;; whether any iterations at all should be executed.  END-TAG is the
 ;;; tag to GO to when the initial termination test says that no
 ;;; iterations should be executed.
-(defgeneric* prologue-form (clause end-tag)
+(defgeneric prologue-form (clause end-tag)
   '())
 
 ;;; This generic function returns a form for CLAUSE that should go
@@ -45,7 +45,7 @@
 ;;; expanded code.  Some of the FOR-AS clauses and also the REPEAT
 ;;; clause generate code here.  END-TAG is the tag to GO to when
 ;;; iteration should terminate.
-(defgeneric* termination-form (clause end-tag)
+(defgeneric termination-form (clause end-tag)
   '())
 
 ;;; This generic function returns a form for CLAUSE that should go in
@@ -56,21 +56,21 @@
 ;;; FIXME: Currently, END-TAG is used only in the WHILE clause as a
 ;;; termination test.  Investigate whether the WHILE clause should use
 ;;; TERMINATION-TEST instead, so that we can eliminate this parameter.
-(defgeneric* body-form (clause end-tag)
+(defgeneric body-form (clause end-tag)
   '())
 
 ;;; This generic function returns a form for CLAUSE that should go
 ;;; after the main body code and the termination tests in the body of
 ;;; the expanded code.  The FOR-AS clauses and also the REPEAT clause
 ;;; generate code here.
-(defgeneric* step-form (clause)
+(defgeneric step-form (clause)
   '())
 
 ;;; This generic function returns a form for CLAUSE that should go in
 ;;; the LOOP epilogue.  Of the clause types defined by the Common Lisp
 ;;; standard, only the method specialized to the FINALLY clause
 ;;; returns a value other than NIL.
-(defgeneric* epilogue-form (clause)
+(defgeneric epilogue-form (clause)
   '())
 
 ;;; Once the LOOP prologue, the LOOP body, and the LOOP epilogue have
@@ -84,7 +84,7 @@
 ;;; admit any subclauses.  For this type of clause, the default
 ;;; implemented here is to wrap the clause in all the bindings, i.e.,
 ;;; both the initial and the final bindings of both exist.
-(defgeneric* wrap-clause (clause inner-form)
+(defgeneric wrap-clause (clause inner-form)
   `(let* ,(bindings clause)
      ,inner-form))
 
@@ -94,7 +94,7 @@
 ;;; By default, the wrapper for
 ;;; each subclause contains only the final bindings, leaving the
 ;;; initial bindings to a single binding form of the entire clause.
-(defgeneric* wrap-subclause (subclause inner-form)
+(defgeneric wrap-subclause (subclause inner-form)
   `(let ,(final-bindings subclause)
      ,inner-form))
 
@@ -115,4 +115,4 @@
 
 
 (define *indent-level* 0)
-(define *parse-trace?* #t)
+(define *parse-trace?* #f)

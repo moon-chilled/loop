@@ -49,4 +49,6 @@
 ;(macroexpand (loop (+ 2 3)))
 ;
 (define x 5)
-(macroexpand (loop while (> x 0) do (format #t "~a~%" x) (set! x (- x 1))))
+;(macroexpand (loop while (> x 0)))
+(format #t "~a~%" (macroexpand (loop while (> x 0) do (format #t "~a~%" x) (set! x (- x 1)))))
+(loop while (> x 0) do (format #t "~a~%" x) (set! x (- x 1)))
