@@ -23,7 +23,7 @@
 (load "with-clause.scm")
 (load "return-clause.scm")
 (load "do-clause.scm")
-;(load "collect-clause.scm")
+(load "collect-clause.scm")
 ;(load "append-clause.scm")
 ;(load "nconc-clause.scm")
 ;(load "count-clause.scm")
@@ -52,3 +52,4 @@
 ;;(macroexpand (loop while (> x 0)))
 ;(format #t "~a~%" (macroexpand (loop while (> x 0) do (format #t "~a~%" x) (set! x (- x 1)))))
 ;(loop while (> x 0) do (format #t "~a~%" x) (set! x (- x 1)))
+(format #t "~a~%" (let ((x 5)) (loop while (> x 0) do (set! x (- x 1)) collect x)))

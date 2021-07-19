@@ -9,7 +9,7 @@
   ;;; INTO-MIXIN as a superclass, the variable is stored in a slot.
   ;;; This method defines the default method to be used for all other
   ;;; accumulation clauses.
-  ((into-var '()))
+  ((into-var #f))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
@@ -26,7 +26,6 @@
 ;;; within a category are compatible in that they can be mixed, even
 ;;; when they accumulate into the same variable.  This generic
 ;;; function takes an accumulation clause and returns the category.
-(defgeneric accumulation-category (clause))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -36,14 +35,14 @@
 ;;; COLLECT-CLAUSE, APPEND-CLAUSE, and NCONC-CLAUSE.
 ;;;
 
-(defclass list-accumulation-clause (accumulation-clause) ()
-  (accumulation-category (clause) 'list)
-  ;;; The methods on ACCUMULATION-VARIABLES call the function TYPE-SPEC
-  ;;; on the clause in order to obtain the third element of each
-  ;;; accumulation variable descriptor.  For the numeric accumulation
-  ;;; clauses, the type is stored in a slot.  For the list accumulation
-  ;;; clauses, we always want to return the type LIST.
-  (type-spec (clause) 'list))
+(defclass list-accumulation-clause (accumulation-clause)
+  ((accumulation-category 'list)
+   ;;; The methods on ACCUMULATION-VARIABLES call the function TYPE-SPEC
+   ;;; on the clause in order to obtain the third element of each
+   ;;; accumulation variable descriptor.  For the numeric accumulation
+   ;;; clauses, the type is stored in a slot.  For the list accumulation
+   ;;; clauses, we always want to return the type LIST.
+   (type-spec 'list)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -52,11 +51,11 @@
 (defclass numeric-accumulation-clause (accumulation-clause)
   ((type-spec 't)))
 
-(defclass count/sum-accumulation-clause (numeric-accumulation-clause) ()
-  (accumulation-category (clause) 'count/sum))
+(defclass count/sum-accumulation-clause (numeric-accumulation-clause)
+  ((accumulation-category 'count/sum)))
 
-(defclass max/min-accumulation-clause (numeric-accumulation-clause) ()
-  (accumulation-category (clause) 'max/min))
+(defclass max/min-accumulation-clause (numeric-accumulation-clause)
+  ((accumulation-category 'max/min)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

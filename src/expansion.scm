@@ -21,7 +21,7 @@
               (type (caddar unique)))
           (let ((initial-value (cond ((eq? category 'count/sum) 0) ;(coerce 0 type)
                                      ((eq? category 'always/never) #t)
-                                     (#t '()))))
+                                     (#t ''()))))
             (append
               (if (not name)
                 `((,*accumulation-variable* ,initial-value))

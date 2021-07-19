@@ -104,7 +104,7 @@
                                               (push (let ((v (gensym))) `(,ns (lambda (,v) (,v ',(car p))))) p)))
                                           (push p parm))))))
                       (map (bind dostuff #f) slots)
-                      (map (bind dostuff #t) (filter (compose not (rbind member slots (compose eq? car))) auxiliary-slots))
+                      (map (bind dostuff #t) (remove-duplicates-from-end (filter (compose not (rbind member slots (compose eq? car))) auxiliary-slots) (compose eq? car)))
                       (cons (reverse parm) (reverse bindings))))
          (all-slots (remove-duplicates-from-end `(,@auxiliary-slots ,@slots) (compose eq? car)))
          (all-methods (remove-duplicates-from-end `(,@auxiliary-methods ,@accessor-methods ,@methods) (compose eq? car))))
