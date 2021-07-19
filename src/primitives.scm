@@ -82,6 +82,8 @@
 
 (define *classes* (make-hash-table 8 eq?))
 
+(define (type-specifier? x) (or (symbol? x) (eq? x #f)))
+
 (define-expansion (defclass name super slots . methods)
   (when (*classes* name) (error "Class already defined: ~a" name))
   (let* ((super (map (lambda (s) (let ((r (*classes* s))) (unless r (error "No superclass ~a" s)) r)) super))

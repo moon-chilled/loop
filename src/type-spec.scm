@@ -21,4 +21,4 @@
   (alternative simple-type-spec-parser destructured-type-spec-parser))
 
 (define-parser optional-type-spec-parser
-  (optional #t type-spec-parser))
+  (optional #f type-spec-parser))

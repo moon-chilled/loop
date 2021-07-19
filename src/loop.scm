@@ -55,3 +55,4 @@
 ;(display (loop for x = 5 then (+ x 1) while (< x 20) collect x))
 ;(macroexpand (loop for x = 5 and y = 7 and z = 14 while (< x 20) do (set! x (+ 1 x)) collect x))
 ;(format #t "~a~%" (let ((x 5)) (loop for y = 7 and z = 14 and q = 21 while (> x 0) do (format #t "~a / ~a / ~a / ~a~%" x y z q) (set! x (- x 1)))))
+;(loop for x = 5 then (+ 1 x) and ((y) . z) = '((1) . 2) while (< x 20) do (format #t "~a/~a~%" x z))

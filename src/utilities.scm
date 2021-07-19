@@ -67,7 +67,7 @@
                (cond ((null? d-var-spec))
                      ((symbol? d-var-spec)
                       (push (list d-var-spec (or d-type-spec 't)) result))
-                     ((symbol? d-type-spec)
+                     ((type-specifier? d-type-spec)
                       (if (not (pair? d-var-spec))
                           (error 'expected-var-spec-but-found
                                  :found d-var-spec)
