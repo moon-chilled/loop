@@ -1,5 +1,3 @@
-(cl:in-package #:sicl-loop)
-
 ;;;; Clause RETURN-CLAUSE.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -12,16 +10,20 @@
 ;;;    return-clause ::= return {form | it}
 
 (defclass return-clause (unconditional-clause)
-  ())
+  ()
+  (accumulation-variables (clause)
+    '()))
 
-(defmethod accumulation-variables ((clause return-clause))
-  '())
 
-(defclass return-it-clause (return-clause)
-  ())
+(defclass return-it-clause (return-clause) ()
+  (body-form (clause end-tag)
+    (unless *it-var* (error "need an iteration variable in order to 'return it'"))
+    `(,*loop-return-sym* ,*it-var*)))
 
 (defclass return-form-clause (return-clause)
-  ((%form :initarg :form :reader form)))
+  (form)
+  (body-form (clause end-tag)
+    `(,*loop-return-sym* ,(clause 'form))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -29,33 +31,19 @@
 
 (define-parser return-it-clause-parser
   (consecutive (lambda (return it)
-                 (declare (ignore return it))
                  (make-instance 'return-it-clause))
                (keyword-parser 'return)
                (keyword-parser 'it)))
 
 (define-parser return-form-clause-parser
   (consecutive (lambda (return form)
-                 (declare (ignore return))
                  (make-instance 'return-form-clause
                    :form form))
                (keyword-parser 'return)
-               'anything-parser))
+               anything-parser))
 
 (define-parser return-clause-parser
-  (alternative 'return-it-clause-parser
-               'return-form-clause-parser))
+  (alternative return-it-clause-parser
+               return-form-clause-parser))
 
-(add-clause-parser 'return-clause-parser)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; Compute body-form.
-
-(defmethod body-form ((clause return-form-clause) end-tag)
-  (declare (ignore end-tag))
-  `(return-from ,*loop-name* ,(form clause)))
-
-(defmethod body-form ((clause return-it-clause) end-tag)
-  (declare (ignore end-tag))
-  `(return-from ,*loop-name* ,*it-var*))
+(add-clause-parser return-clause-parser)

@@ -21,7 +21,7 @@
 (load "initial-clause.scm")
 (load "final-clause.scm")
 (load "with-clause.scm")
-;(load "return-clause.scm")
+(load "return-clause.scm")
 (load "do-clause.scm")
 ;(load "collect-clause.scm")
 ;(load "append-clause.scm")
@@ -48,7 +48,7 @@
 
 ;(macroexpand (loop (+ 2 3)))
 ;
-(define x 5)
-;(macroexpand (loop while (> x 0)))
-(format #t "~a~%" (macroexpand (loop while (> x 0) do (format #t "~a~%" x) (set! x (- x 1)))))
-(loop while (> x 0) do (format #t "~a~%" x) (set! x (- x 1)))
+;(define x 5)
+;;(macroexpand (loop while (> x 0)))
+;(format #t "~a~%" (macroexpand (loop while (> x 0) do (format #t "~a~%" x) (set! x (- x 1)))))
+;(loop while (> x 0) do (format #t "~a~%" x) (set! x (- x 1)))
