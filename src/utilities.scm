@@ -66,7 +66,7 @@
     (letrec ((extract-aux (lambda (d-var-spec d-type-spec)
                (cond ((null? d-var-spec))
                      ((symbol? d-var-spec)
-                      (push (list d-var-spec (or d-type-spec t)) result))
+                      (push (list d-var-spec (or d-type-spec 't)) result))
                      ((symbol? d-type-spec)
                       (if (not (pair? d-var-spec))
                           (error 'expected-var-spec-but-found
@@ -80,7 +80,7 @@
                       (error 'expected-type-spec-but-found
                              :found d-type-spec))
                      (#t
-                      (extract-aux (car d-var-spec) (car d-type-spec))
-                      (extract-aux (cdr d-var-spec) (cdr d-type-spec)))))))
+                      (extract-aux (car d-var-spec) (if d-type-spec (car d-type-spec) #f))
+                      (extract-aux (cdr d-var-spec) (if d-type-spec (cdr d-type-spec) #f)))))))
       (extract-aux d-var-spec d-type-spec)
       result)))

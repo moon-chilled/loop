@@ -19,8 +19,8 @@
 
 (defmethod bound-variables ((subclause for-as-hash))
   (mapcar #'car
-          (append (extract-variables (var-spec subclause) nil)
-                  (extract-variables (other-var-spec subclause) nil))))
+          (append (extract-variables (var-spec subclause) #f)
+                  (extract-variables (other-var-spec subclause) #f))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -176,7 +176,7 @@
                  for (variable) in (extract-variables d-var-spec d-type-spec)
                  collect `(,variable nil))
          ,@(loop with other-var-spec = (other-var-spec subclause)
-                 for (variable) in (extract-variables other-var-spec nil)
+                 for (variable) in (extract-variables other-var-spec #f)
                  collect `(,variable nil)))
      (declare ,@(loop with d-var-spec = (var-spec subclause)
                       with d-type-spec = (type-spec subclause)

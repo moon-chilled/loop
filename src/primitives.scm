@@ -2,12 +2,10 @@
   (unless (symbol? s) (error))
   `(begin (set! ,s (cons ,v ,s)) ,s))
 
-(define (foldr f l)
-  (cond ((null? l) '())
-        ((null? (cddr l)) (f (car l) (cadr l)))
-        (#t (f (car l) (foldr f (cdr l))))))
-
-(define (list* . p) (foldr cons p))
+(define (list* . p)
+  (if (null? (cdr p))
+    (car p)
+    (cons (car p) (apply list* (cdr p)))))
 
 ; a la j: x f&g y ←→ (f x) g (f y)
 ; hence, ((& f g) x y z...) ←→ (f (g x) (g y) (g z)...)

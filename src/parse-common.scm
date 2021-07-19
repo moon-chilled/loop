@@ -50,7 +50,7 @@
 ;;; forms.
 
 (define-parser compound+
-  (repeat+ (lambda (forms)
+  (repeat+ (lambda forms
              (cons 'begin forms))
            (singleton identity pair?)))
 

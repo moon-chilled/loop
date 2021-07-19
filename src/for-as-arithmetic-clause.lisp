@@ -42,7 +42,7 @@
 
 (defmethod bound-variables ((subclause for-as-arithmetic))
   (mapcar #'car
-          (extract-variables (var-spec subclause) nil)))
+          (extract-variables (var-spec subclause) #f)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

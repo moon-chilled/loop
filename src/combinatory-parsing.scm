@@ -15,8 +15,7 @@
 
 (define (parse-trace-output format-control . arguments)
   (when *parse-trace?*
-    (format #t
-            (apply string (let l ((i (* 2 *indent-level*))) (if (= i 0) '() (cons #\space (l (- i 1)))))))
+    (format #t (make-string (* 2 *indent-level*) #\space))
     (apply format #t format-control arguments)))
 
 (define (trace-parser name parser tokens)
@@ -93,7 +92,7 @@
           (parser remaining-tokens)
         (if success
           (loop rest (cons result results))
-          (list #t (combiner (reverse results)) remaining-tokens))))))
+          (list #t (apply combiner (reverse results)) remaining-tokens))))))
 
 ;;; Take a function designator (called the COMBINER) and a parser P
 ;;; and return a parser Q that invokes P repeatedly until it fails,
@@ -113,7 +112,7 @@
                 (parser remaining-tokens)
               (if success
                 (loop rest (cons result results))
-                (list #t (combiner (reverse results)) remaining-tokens))))))))
+                (list #t (apply combiner (reverse results)) remaining-tokens))))))))
 
 ;;; Take a default value and a parser P and return a parser Q that
 ;;; always succeeds.  Q invokes P once.  If P succeeds, then Q
@@ -125,7 +124,7 @@
     (pidgin-destructuring-bind (success result rest)
         (parser tokens)
       (if success
-          (values #t result rest)
-          (values #t default tokens)))))
+          (list #t result rest)
+          (list #t default tokens)))))
 
 ;;;  LocalWords:  parsers

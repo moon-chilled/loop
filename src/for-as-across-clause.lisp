@@ -31,7 +31,7 @@
 ;;; variables.
 (defmethod bound-variables ((clause for-as-across))
   (mapcar #'car
-          (extract-variables (var-spec clause) nil)))
+          (extract-variables (var-spec clause) #f)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

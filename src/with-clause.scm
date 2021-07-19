@@ -39,8 +39,7 @@
 
 (defclass with-clause (variable-clause subclauses-mixin) ()
   (bound-variables (clause)
-    (foldr append
-            (map bound-variables (clause 'subclauses))))
+    (apply append (map bound-variables (clause 'subclauses))))
   (initial-bindings (clause)
     (apply append (map initial-bindings (clause 'subclauses)))))
 
@@ -60,14 +59,14 @@
 
   (bound-variables (subclause)
     (map car
-         (extract-variables (subclause 'var-spec) '())))
+         (extract-variables (subclause 'var-spec) #f)))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the declarations.
   
   (declarations (clause)
-    (foldr append (map declarations (clause 'subclauses)))))
+    (apply append (map declarations (clause 'subclauses)))))
 
 
 ;(defmethod initialize-instance :after
