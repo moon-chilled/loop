@@ -1,0 +1,5 @@
+(define-macro (loop . forms)
+  (let ((end-tag (gensym)))
+    `(let ((loop-finish (macro ()
+                          '(,end-tag))))
+       ,(expand-body forms end-tag))))
