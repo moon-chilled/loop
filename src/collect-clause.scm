@@ -12,7 +12,7 @@
          (begin (set-cdr! ,*list-tail-accumulation-variable*
                           (list ,*it-var*))
                 (set! ,*list-tail-accumulation-variable*
-                      (cdr ,*list-tail-accumulation-variable*)))))) ;ditto
+                      (cdr ,*list-tail-accumulation-variable*)))))) ;should this be last-pair?
 
 (defclass collect-form-clause (collect-clause form-mixin)
   ()
@@ -20,41 +20,41 @@
   (body-form (clause end-tag)
     `(if (null? ,*list-tail-accumulation-variable*)
        (begin (set! ,*list-tail-accumulation-variable*
-                    (list ,(clause 'form)))
+                    (list-values ,(clause 'form)))
               (set! ,*accumulation-variable*
                     ,*list-tail-accumulation-variable*))
-       (begin (set-cdr! ,*list-tail-accumulation-variable*
-                        (list ,(clause 'form)))
-              (set! ,*list-tail-accumulation-variable*
-                    (cdr ,*list-tail-accumulation-variable*)))))) ;todo should be last-cdr
+       (begin (set! ,*list-tail-accumulation-variable*
+                    (,last-pair ,*list-tail-accumulation-variable*))
+              (set-cdr! ,*list-tail-accumulation-variable*
+                        (list-values ,(clause 'form)))))))
 
 (defclass collect-it-into-clause (into-mixin collect-clause it-mixin)
   ()
 
   (body-form (clause end-tag)
-    `(if (null? ,(tail-variable (into-var clause)))
-         (begin (set! ,(tail-variable (into-var clause))
+    `(if (null? ,(tail-variable (clause 'into-var)))
+         (begin (set! ,(tail-variable (clause 'into-var))
                       (list ,*it-var*))
-                (set! ,(into-var clause)
-                      ,(tail-variable (into-var clause))))
-         (begin (set-cdr! ,(tail-variable (into-var clause))
+                (set! ,(clause 'into-var)
+                      ,(tail-variable (clause 'into-var))))
+         (begin (set-cdr! ,(tail-variable (clause 'into-var))
                           (list ,*it-var*))
-                (set! ,(tail-variable (into-var clause))
-                      (cdr ,(tail-variable (into-var clause)))))))) ;ditto
+                (set! ,(tail-variable (clause 'into-var))
+                      (cdr ,(tail-variable (clause 'into-var)))))))) ;ditto
 
 (defclass collect-form-into-clause (into-mixin collect-clause form-mixin)
   ()
 
   (body-form (clause end-tag)
-    `(if (null? ,(tail-variable (into-var clause)))
-       (begin (set! ,(tail-variable (into-var clause))
-                    (list ,(clause 'form)))
-              (set! ,(into-var clause)
-                    ,(tail-variable (into-var clause))))
-       (begin (set-cdr! ,(tail-variable (into-var clause))
-                        (list ,(clause 'form)))
-              (set! ,(tail-variable (into-var clause))
-                    (cdr ,(tail-variable (into-var clause)))))))) ;ditto
+    `(if (null? ,(tail-variable (clause 'into-var)))
+       (begin (set! ,(tail-variable (clause 'into-var))
+                    (list-values ,(clause 'form)))
+              (set! ,(clause 'into-var)
+                    ,(tail-variable (clause 'into-var))))
+       (begin (set! ,(tail-variable (clause 'into-var))
+                    (,last-pair ,(tail-variable (clause 'into-var))))
+              (set-cdr! ,(tail-variable (clause 'into-var))
+                        (list-values ,(clause 'form)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

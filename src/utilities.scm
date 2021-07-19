@@ -29,8 +29,8 @@
                      (#t
                       (let ((temp (gensym)))
                         (push `(,temp ,form) bindings)
-                        (traverse (car d-var-spec) `(list-car ,temp))
-                        (traverse (cdr d-var-spec) `(list-cdr ,temp))))))))
+                        (traverse (car d-var-spec) `(,list-car ,temp))
+                        (traverse (cdr d-var-spec) `(,list-cdr ,temp))))))))
       (traverse d-var-spec form)
       (reverse bindings))))
 
