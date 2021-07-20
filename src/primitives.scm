@@ -54,6 +54,37 @@
     (and (f (car l))
          (every f (cdr l)))))
 
+(define (position-if pred l)
+  (let loop ((l l)
+             (i 0))
+    (cond
+      ((null? l) #f)
+      ((pred (car l)) i)
+      (#t (loop (cdr l) (+ 1 i))))))
+
+(define (position-if-from-end pred l)
+  (let loop ((l l)
+             (i 0))
+    (cond ((null? l) #f)
+          ((pred (car l)) (or (loop (cdr l) (+ 1 i)) i))
+          (#t (loop (cdr l) (+ 1 i))))))
+
+(define (for-each-on f xs)
+  (if (null? xs)
+    '()
+    (begin
+      (f xs)
+      (for-each-on f (cdr xs)))))
+
+(define (count x xs pred)
+  (let loop ((xs xs)
+             (acc 0))
+    (if (null? xs) acc
+      (loop (cdr xs) (+ acc (if (pred x (car xs)) 1 0))))))
+
+(define (intersection x y pred)
+  (filter (rbind member y pred) x))
+
 ; to make up for multiple-value-bind
 (define-macro (pidgin-destructuring-bind spec var . body)
   (let ((v (gensym)))
@@ -77,7 +108,7 @@
 (define-macro (defgeneric name pspec . body)
   `(define (,name ,@pspec)
      (if (eq? ,name (,(car pspec) ',name))
-       ,(if (null? body) `(error ,(format #f "No method ~a bound" name)) `(begin ,@body))
+       ,(if (null? body) `(error "No method ~a bound in class ~a" ',name (,(car pspec) 'class-name)) `(begin ,@body))
        ((,(car pspec) ',name) ,@pspec))))
 
 (define *classes* (make-hash-table 8 eq?))
@@ -107,7 +138,8 @@
                       (map (bind dostuff #t) (remove-duplicates-from-end (filter (compose not (rbind member slots (compose eq? car))) auxiliary-slots) (compose eq? car)))
                       (cons (reverse parm) (reverse bindings))))
          (all-slots (remove-duplicates-from-end `(,@auxiliary-slots ,@slots) (compose eq? car)))
-         (all-methods (remove-duplicates-from-end `(,@auxiliary-methods ,@accessor-methods ,@methods) (compose eq? car))))
+         (all-methods (remove-duplicates-from-end `(,@auxiliary-methods ,@accessor-methods ,@methods) (compose eq? car)))
+         (classes (cons name (remove-duplicates (apply append (map (lambda (x) (x 'classes)) super)) eq?))))
     ; turns ((a b) (x y)) into ('a b 'x y)
     (define (flatten-bindlist x)
       (apply append (map (lambda (x) (cons `',(car x) (cdr x))) x)))
@@ -116,10 +148,14 @@
            (inlet 'all-slots ',all-slots
                   'all-methods ',all-methods
                   'class-name ',name
+                  'classes ',classes
                   'make (lambda* ,(car parm.bind)
                           (let ((class-name ',name)
                                 ,@(cdr parm.bind)
                                 ,@all-methods)
                             (curlet)))))))
+
 (define (make-instance what . p)
   (apply ((*classes* what) 'make) p))
+
+(define (type? var type) (member type ((*classes* (var 'class-name)) 'classes)))

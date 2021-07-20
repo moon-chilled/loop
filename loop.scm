@@ -119,6 +119,37 @@
     (and (f (car l))
          (every f (cdr l)))))
 
+(define (position-if pred l)
+  (let loop ((l l)
+             (i 0))
+    (cond
+      ((null? l) #f)
+      ((pred (car l)) i)
+      (#t (loop (cdr l) (+ 1 i))))))
+
+(define (position-if-from-end pred l)
+  (let loop ((l l)
+             (i 0))
+    (cond ((null? l) #f)
+          ((pred (car l)) (or (loop (cdr l) (+ 1 i)) i))
+          (#t (loop (cdr l) (+ 1 i))))))
+
+(define (for-each-on f xs)
+  (if (null? xs)
+    '()
+    (begin
+      (f xs)
+      (for-each-on f (cdr xs)))))
+
+(define (count x xs pred)
+  (let loop ((xs xs)
+             (acc 0))
+    (if (null? xs) acc
+      (loop (cdr xs) (+ acc (if (pred x (car xs)) 1 0))))))
+
+(define (intersection x y pred)
+  (filter (rbind member y pred) x))
+
 ; to make up for multiple-value-bind
 (define-macro (pidgin-destructuring-bind spec var . body)
   (let ((v (gensym)))
@@ -142,7 +173,7 @@
 (define-macro (defgeneric name pspec . body)
   `(define (,name ,@pspec)
      (if (eq? ,name (,(car pspec) ',name))
-       ,(if (null? body) `(error ,(format #f "No method ~a bound" name)) `(begin ,@body))
+       ,(if (null? body) `(error "No method ~a bound in class ~a" ',name (,(car pspec) 'class-name)) `(begin ,@body))
        ((,(car pspec) ',name) ,@pspec))))
 
 (define *classes* (make-hash-table 8 eq?))
@@ -172,7 +203,8 @@
                       (map (bind dostuff #t) (remove-duplicates-from-end (filter (compose not (rbind member slots (compose eq? car))) auxiliary-slots) (compose eq? car)))
                       (cons (reverse parm) (reverse bindings))))
          (all-slots (remove-duplicates-from-end `(,@auxiliary-slots ,@slots) (compose eq? car)))
-         (all-methods (remove-duplicates-from-end `(,@auxiliary-methods ,@accessor-methods ,@methods) (compose eq? car))))
+         (all-methods (remove-duplicates-from-end `(,@auxiliary-methods ,@accessor-methods ,@methods) (compose eq? car)))
+         (classes (cons name (remove-duplicates (apply append (map (lambda (x) (x 'classes)) super)) eq?))))
     ; turns ((a b) (x y)) into ('a b 'x y)
     (define (flatten-bindlist x)
       (apply append (map (lambda (x) (cons `',(car x) (cdr x))) x)))
@@ -181,13 +213,17 @@
            (inlet 'all-slots ',all-slots
                   'all-methods ',all-methods
                   'class-name ',name
+                  'classes ',classes
                   'make (lambda* ,(car parm.bind)
                           (let ((class-name ',name)
                                 ,@(cdr parm.bind)
                                 ,@all-methods)
                             (curlet)))))))
+
 (define (make-instance what . p)
   (apply ((*classes* what) 'make) p))
+
+(define (type? var type) (member type ((*classes* (var 'class-name)) 'classes)))
 ;;; The purpose of this generic function is to generate a list of all
 ;;; bound variables in a clause.  The same variable occurs as many
 ;;; times in the list as the number of times it is bound in the
@@ -794,7 +830,7 @@
       (let ((clauses (parse-loop-body loop-body))
             (end-tag (gensym)))
         (analyze-clauses clauses)
-        (let-temporarily ((*loop-name* (if (eq? 'name-clause ((car clauses) 'class-name))
+        (let-temporarily ((*loop-name* (if (type? (car clauses) 'name-clause)
                                          ((car clauses) 'name)
                                          #f))
                           (*loop-return-sym* (gensym))
@@ -808,8 +844,6 @@
                  (lambda (,*loop-return-sym*)
                    (let ((loop-finish (macro () (,end-tag))))
                      ,(expand-clauses clauses end-tag))))))))))
-
-(define (analyze-clauses clauses) ()) ;todo analysis.scm
 ;;; In the dictionary entry for LOOP, the HyperSpec says:
 ;;;
 ;;;   main-clause ::= unconditional | 
@@ -1869,28 +1903,28 @@
 (defclass maximize-it-clause (maximize-clause it-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,*accumulation-variable*)
-         (set! ,*accumulation-variable* ,*it-var*)
+         (set! ,*accumulation-variable* (,ensure-real ,*it-var* 'max-argument-must-be-real))
          (set! ,*accumulation-variable*
                (,maximize ,*accumulation-variable* ,*it-var*)))))
 
 (defclass maximize-form-clause (maximize-clause form-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,*accumulation-variable*)
-         (set! ,*accumulation-variable* ,(clause 'form))
+         (set! ,*accumulation-variable* (,ensure-real ,(clause 'form) 'max-argument-must-be-real))
          (set! ,*accumulation-variable*
                (,maximize ,*accumulation-variable* ,(clause 'form))))))
 
 (defclass maximize-it-into-clause (into-mixin maximize-clause it-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,(clause 'into-var))
-         (set! ,(clause 'into-var) ,*it-var*)
+         (set! ,(clause 'into-var) (,ensure-real ,*it-var* 'max-argument-must-be-real))
          (set! ,(clause 'into-var)
                (,maximize ,(clause 'into-var) ,*it-var*)))))
 
 (defclass maximize-form-into-clause (into-mixin maximize-clause form-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,(clause 'into-var))
-         (set! ,(clause 'into-var) ,(clause 'form))
+         (set! ,(clause 'into-var) (,ensure-real ,(clause 'form) 'max-argument-must-be-real))
          (set! ,(clause 'into-var)
                (,maximize ,(clause 'into-var) ,(clause 'form))))))
 
@@ -1955,28 +1989,28 @@
 (defclass minimize-it-clause (minimize-clause it-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,*accumulation-variable*)
-         (set! ,*accumulation-variable* ,*it-var*)
+         (set! ,*accumulation-variable* (ensure-real ,*it-var* 'min-argument-must-be-real))
          (set! ,*accumulation-variable*
                (,minimize ,*accumulation-variable* ,*it-var*)))))
 
 (defclass minimize-form-clause (minimize-clause form-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,*accumulation-variable*)
-         (set! ,*accumulation-variable* ,(clause 'form))
+         (set! ,*accumulation-variable* (ensure-real ,(clause 'form) 'min-argument-must-be-real))
          (set! ,*accumulation-variable*
                (,minimize ,*accumulation-variable* ,(clause 'form))))))
 
 (defclass minimize-it-into-clause (into-mixin minimize-clause it-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,(clause 'into-var))
-         (set! ,(clause 'into-var) ,*it-var*)
+         (set! ,(clause 'into-var) (ensure-real ,*it-var* 'min-argument-must-be-real))
          (set! ,(clause 'into-var)
                (,minimize ,(clause 'into-var) ,*it-var*)))))
 
 (defclass minimize-form-into-clause (into-mixin minimize-clause form-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,(clause 'into-var))
-         (set! ,(clause 'into-var) ,(clause 'form))
+         (set! ,(clause 'into-var) (ensure-real ,(clause 'form) 'min-argument-must-be-real))
          (set! ,(clause 'into-var)
                (,minimize ,(clause 'into-var) ,(clause 'form))))))
 
@@ -3331,6 +3365,10 @@
               (d-type-spec (clause 'type-spec)))
           (map (compose (rbind list #<undefined>) car) (extract-variables d-var-spec d-type-spec)))))
 
+ (bound-variables (subclause)
+   (map car
+        (extract-variables (subclause 'var-spec) #f)))
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the declarations.
@@ -3347,10 +3385,6 @@
 ;;; Clause FOR-AS-IN-LIST.
 
 (defclass for-as-in-list (for-as-list) ()
- (bound-variables (subclause)
-   (map car
-        (extract-variables (subclause 'var-spec) #f)))
-
   (prologue-form (clause end-tag)
     `(begin ,(termination-form clause end-tag)
             ,(generate-assignments (clause 'var-spec) `(car ,(clause 'rest-var)))
@@ -3364,9 +3398,7 @@
   (step-form ((clause for-as-in-list))
     `(begin ,(generate-assignments (clause 'var-spec) `(car ,(clause 'rest-var)))
             (set! ,(clause 'rest-var)
-                  (,(if (simple-by-form? (clause 'by-form)) (clause 'by-form) (clause 'by-var)) ,(clause 'rest-var)))))
-
- )
+                  (,(if (simple-by-form? (clause 'by-form)) (clause 'by-form) (clause 'by-var)) ,(clause 'rest-var))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3634,6 +3666,88 @@
                anything-parser))
 
 (add-for-as-subclause-parser for-as-across-parser)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Syntactic and semantic analysis
+
+;;; Check that if there is a name-clause, the last one is in position
+;;; zero.
+(define (check-name-clause-position clauses)
+  (let ((name-clause-position
+          (position-if-from-end (rbind type? 'name-clause) clauses)))
+    (when (and name-clause-position (positive? name-clause-position))
+      (error 'name-clause-not-first))))
+
+;;; Check that there is not a variable-clause following a main clause.
+;;; Recall that we diverge from the BNF grammar in the HyperSpec so
+;;; that INITIALLY and FINALLY are neither main clauses nor variable
+;;; clauses.
+(define (check-order-variable-clause-main-clause clauses)
+  (let ((last-variable-clause-position
+          (position-if-from-end (rbind type? 'variable-clause) clauses))
+        (first-main-clause-position
+          (position-if (rbind type? 'main-clause) clauses)))
+    (when (and last-variable-clause-position
+               first-main-clause-position
+               (> last-variable-clause-position first-main-clause-position))
+      (error 'invalid-clause-order))))
+
+(define (verify-clause-order clauses)
+  (check-name-clause-position clauses)
+  (check-order-variable-clause-main-clause clauses))
+
+(define (check-variable-uniqueness clauses)
+  (let* ((variables (apply append (map bound-variables clauses)))
+         (unique-variables (remove-duplicates variables eq?)))
+    (unless (= (length variables)
+               (length unique-variables))
+      (map (lambda (var) (when (> (count var variables eq?) 1)
+                           (error 'multiple-variable-occurrences
+                                  :bound-variable var)))
+           unique-variables))))
+
+;;; Check that for a given accumulation variable, there is only one
+;;; category.  Recall that the accumlation categores are represented
+;;; by the symbols LIST, COUNT/SUM, and MAX/MIN.
+(define (check-accumulation-categories clauses)
+  (let* ((descriptors (apply append (map accumulation-variables clauses)))
+         (equal-fun (lambda (d1 d2)
+                      (and (eq? (car d1) (car d2))
+                           (eq? (cadr d1) (cadr d2)))))
+         (unique (remove-duplicates descriptors equal-fun)))
+    (for-each-on (lambda (remaining)
+                   (let ((entry (member (caar remaining)
+                                (cdr remaining)
+                                (hook eq? car))))
+                     (when entry
+                       (error "the accumulation variable ~s is used both for ~s accumulation and ~s accumulation."
+                              (caar remaining)
+                              (cdar remaining)
+                              (cdar entry)))))
+                 unique)))
+
+;;; Check that there is no overlap between the bound variables and the
+;;; accumulation variables.
+(define (check-no-variable-overlap clauses)
+  (let ((bound-variables
+          (apply append (map bound-variables clauses)))
+        (accumulation-variables
+          (map car
+               (apply append
+                      (map accumulation-variables clauses)))))
+    (let ((intersection
+            (intersection bound-variables accumulation-variables
+                          eq?)))
+      (unless (null? intersection)
+        (error "The variable ~s is used both as an iteration variable and as an accumulation variable."
+               (car intersection))))))
+
+;;; FIXME: Add more analyses.
+(define (analyze-clauses clauses)
+  (verify-clause-order clauses)
+  (check-variable-uniqueness clauses)
+  (check-accumulation-categories clauses)
+  (check-no-variable-overlap clauses))
 ;;; This function is called in a SUM clause in order to sum the
 ;;; accumulated value with the new one.
 (define (sum x y)

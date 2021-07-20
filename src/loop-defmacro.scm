@@ -39,10 +39,8 @@
                 "for-as-list-clause.scm"
                 "for-as-equals-then-clause.scm"
                 "for-as-across-clause.scm"
-                ;"for-as-hash-clause.scm"
-                ;"for-as-package-clause.scm"
 
-                ;"analysis.scm"
+                "analysis.scm"
                 "run-time-support.scm"))
 
 (for-each load files)

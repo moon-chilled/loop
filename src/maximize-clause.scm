@@ -3,28 +3,28 @@
 (defclass maximize-it-clause (maximize-clause it-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,*accumulation-variable*)
-         (set! ,*accumulation-variable* ,*it-var*)
+         (set! ,*accumulation-variable* (,ensure-real ,*it-var* 'max-argument-must-be-real))
          (set! ,*accumulation-variable*
                (,maximize ,*accumulation-variable* ,*it-var*)))))
 
 (defclass maximize-form-clause (maximize-clause form-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,*accumulation-variable*)
-         (set! ,*accumulation-variable* ,(clause 'form))
+         (set! ,*accumulation-variable* (,ensure-real ,(clause 'form) 'max-argument-must-be-real))
          (set! ,*accumulation-variable*
                (,maximize ,*accumulation-variable* ,(clause 'form))))))
 
 (defclass maximize-it-into-clause (into-mixin maximize-clause it-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,(clause 'into-var))
-         (set! ,(clause 'into-var) ,*it-var*)
+         (set! ,(clause 'into-var) (,ensure-real ,*it-var* 'max-argument-must-be-real))
          (set! ,(clause 'into-var)
                (,maximize ,(clause 'into-var) ,*it-var*)))))
 
 (defclass maximize-form-into-clause (into-mixin maximize-clause form-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,(clause 'into-var))
-         (set! ,(clause 'into-var) ,(clause 'form))
+         (set! ,(clause 'into-var) (,ensure-real ,(clause 'form) 'max-argument-must-be-real))
          (set! ,(clause 'into-var)
                (,maximize ,(clause 'into-var) ,(clause 'form))))))
 

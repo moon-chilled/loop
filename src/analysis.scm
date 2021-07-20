@@ -4,87 +4,78 @@
 
 ;;; Check that if there is a name-clause, the last one is in position
 ;;; zero.
-(defun check-name-clause-position (clauses)
+(define (check-name-clause-position clauses)
   (let ((name-clause-position
-          (position-if (lambda (clause) (typep clause 'name-clause)) clauses
-                       :from-end t)))
-    (when (and (not (null name-clause-position)) (plusp name-clause-position))
+          (position-if-from-end (rbind type? 'name-clause) clauses)))
+    (when (and name-clause-position (positive? name-clause-position))
       (error 'name-clause-not-first))))
 
 ;;; Check that there is not a variable-clause following a main clause.
 ;;; Recall that we diverge from the BNF grammar in the HyperSpec so
 ;;; that INITIALLY and FINALLY are neither main clauses nor variable
 ;;; clauses.
-(defun check-order-variable-clause-main-clause (clauses)
+(define (check-order-variable-clause-main-clause clauses)
   (let ((last-variable-clause-position
-          (position-if (lambda (clause)
-                         (typep clause 'variable-clause))
-                       clauses
-                       :from-end t))
+          (position-if-from-end (rbind type? 'variable-clause) clauses))
         (first-main-clause-position
-          (position-if (lambda (clause)
-                         (typep clause 'main-clause))
-                       clauses)))
-    (when (and (not (null last-variable-clause-position))
-               (not (null first-main-clause-position))
+          (position-if (rbind type? 'main-clause) clauses)))
+    (when (and last-variable-clause-position
+               first-main-clause-position
                (> last-variable-clause-position first-main-clause-position))
       (error 'invalid-clause-order))))
 
-(defun verify-clause-order (clauses)
+(define (verify-clause-order clauses)
   (check-name-clause-position clauses)
   (check-order-variable-clause-main-clause clauses))
 
-(defun check-variable-uniqueness (clauses)
-  (let* ((variables (reduce #'append (mapcar #'bound-variables clauses)
-                            :from-end t))
-         (unique-variables (remove-duplicates variables :test #'eq)))
+(define (check-variable-uniqueness clauses)
+  (let* ((variables (apply append (map bound-variables clauses)))
+         (unique-variables (remove-duplicates variables eq?)))
     (unless (= (length variables)
                (length unique-variables))
-      (loop for var in unique-variables
-            do (when (> (count var variables :test #'eq) 1)
-                 (error 'multiple-variable-occurrences
-                        :bound-variable var))))))
+      (map (lambda (var) (when (> (count var variables eq?) 1)
+                           (error 'multiple-variable-occurrences
+                                  :bound-variable var)))
+           unique-variables))))
 
 ;;; Check that for a given accumulation variable, there is only one
 ;;; category.  Recall that the accumlation categores are represented
 ;;; by the symbols LIST, COUNT/SUM, and MAX/MIN.
-(defun check-accumulation-categories (clauses)
-  (let* ((descriptors (reduce #'append
-                              (mapcar #'accumulation-variables clauses)))
+(define (check-accumulation-categories clauses)
+  (let* ((descriptors (apply append (map accumulation-variables clauses)))
          (equal-fun (lambda (d1 d2)
-                      (and (eq (first d1) (first d2))
-                           (eq (second d1) (second d2)))))
-         (unique (remove-duplicates descriptors :test equal-fun)))
-    (loop for remaining on unique
-          do (let ((entry (member (first (first remaining))
-                                  (rest remaining)
-                                  :test #'eq
-                                  :key #'first)))
-               (unless (null entry)
-                 (error "the accumulation variable ~s is used both for ~s accumulation and ~s accumulation."
-                        (first (first remaining))
-                        (second (first remaining))
-                        (second (first entry))))))))
+                      (and (eq? (car d1) (car d2))
+                           (eq? (cadr d1) (cadr d2)))))
+         (unique (remove-duplicates descriptors equal-fun)))
+    (for-each-on (lambda (remaining)
+                   (let ((entry (member (caar remaining)
+                                (cdr remaining)
+                                (hook eq? car))))
+                     (when entry
+                       (error "the accumulation variable ~s is used both for ~s accumulation and ~s accumulation."
+                              (caar remaining)
+                              (cdar remaining)
+                              (cdar entry)))))
+                 unique)))
 
 ;;; Check that there is no overlap between the bound variables and the
 ;;; accumulation variables.
-(defun check-no-variable-overlap (clauses)
+(define (check-no-variable-overlap clauses)
   (let ((bound-variables
-          (reduce #'append (mapcar #'bound-variables clauses)
-                  :from-end t))
+          (apply append (map bound-variables clauses)))
         (accumulation-variables
-          (mapcar #'first
-                  (reduce #'append
-                          (mapcar #'accumulation-variables clauses)))))
+          (map car
+               (apply append
+                      (map accumulation-variables clauses)))))
     (let ((intersection
             (intersection bound-variables accumulation-variables
-                          :test #'eq)))
-      (unless (null intersection)
+                          eq?)))
+      (unless (null? intersection)
         (error "The variable ~s is used both as an iteration variable and as an accumulation variable."
                (car intersection))))))
 
 ;;; FIXME: Add more analyses.
-(defun analyze-clauses (clauses)
+(define (analyze-clauses clauses)
   (verify-clause-order clauses)
   (check-variable-uniqueness clauses)
   (check-accumulation-categories clauses)

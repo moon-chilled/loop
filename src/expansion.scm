@@ -83,7 +83,7 @@
       (let ((clauses (parse-loop-body loop-body))
             (end-tag (gensym)))
         (analyze-clauses clauses)
-        (let-temporarily ((*loop-name* (if (eq? 'name-clause ((car clauses) 'class-name))
+        (let-temporarily ((*loop-name* (if (type? (car clauses) 'name-clause)
                                          ((car clauses) 'name)
                                          #f))
                           (*loop-return-sym* (gensym))
@@ -97,5 +97,3 @@
                  (lambda (,*loop-return-sym*)
                    (let ((loop-finish (macro () (,end-tag))))
                      ,(expand-clauses clauses end-tag))))))))))
-
-(define (analyze-clauses clauses) ()) ;todo analysis.scm

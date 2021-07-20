@@ -21,6 +21,10 @@
               (d-type-spec (clause 'type-spec)))
           (map (compose (rbind list #<undefined>) car) (extract-variables d-var-spec d-type-spec)))))
 
+ (bound-variables (subclause)
+   (map car
+        (extract-variables (subclause 'var-spec) #f)))
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the declarations.
@@ -37,10 +41,6 @@
 ;;; Clause FOR-AS-IN-LIST.
 
 (defclass for-as-in-list (for-as-list) ()
- (bound-variables (subclause)
-   (map car
-        (extract-variables (subclause 'var-spec) #f)))
-
   (prologue-form (clause end-tag)
     `(begin ,(termination-form clause end-tag)
             ,(generate-assignments (clause 'var-spec) `(car ,(clause 'rest-var)))
@@ -54,9 +54,7 @@
   (step-form ((clause for-as-in-list))
     `(begin ,(generate-assignments (clause 'var-spec) `(car ,(clause 'rest-var)))
             (set! ,(clause 'rest-var)
-                  (,(if (simple-by-form? (clause 'by-form)) (clause 'by-form) (clause 'by-var)) ,(clause 'rest-var)))))
-
- )
+                  (,(if (simple-by-form? (clause 'by-form)) (clause 'by-form) (clause 'by-var)) ,(clause 'rest-var))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
