@@ -38,7 +38,7 @@
                 "for-as-arithmetic-clause.scm"
                 "for-as-list-clause.scm"
                 "for-as-equals-then-clause.scm"
-                ;"for-as-across-clause.scm"
+                "for-as-across-clause.scm"
                 ;"for-as-hash-clause.scm"
                 ;"for-as-package-clause.scm"
 
