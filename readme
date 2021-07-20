@@ -22,16 +22,22 @@ Additional notes:
 - Error messages are not nice (yet)
 - Uninitialized values will be initialized to #<undefined> rather than nil
   (loop with x return x) #| --> #<undefined> |#
+  - However, loops without an explicit result will return null.
+    E.G. (loop repeat 1) #| --> () |#
 - Type specifiers are parsed, but largely ignored.  The exception is the above:
   (loop with x fixnum return x) #| --> 0 |#
   I'm not sure what more there is to do with those; suggestions welcome!
-- When destructuring, the catch-all no-bind is () rather than NIL.  E.G. (loop
-  with (x () y) = '(1 2 3 4) return whatever)  ←→  (let ((x 1) (y 3)) whatever)
-  In this case, () is the empty (de)structure which matches everything and
-  places no constraints.
+- When destructuring, the catch-all no-bind is ().  E.G.
+  (loop with (x () y) = '(1 2 3 4) return whatever)
+  ←→ (let ((x 1) (y 3)) whatever) 
+  In this case, () is the empty (de)structure which matches everything, binds
+  nothing, and places no constraints; a case where (imho) null being a special
+  object rather than a symbol leads to more elegant formulations.
 
 Todo:
 
 - Collect a vector/string instead of a list
 - Collect into a lazy iterator?
 - Max/min that never executes should return -inf/inf
+- Rewrite jumping mechanism to use call-with-exit instead of throw/catch
+- Fix loop-finish (or elide?)
