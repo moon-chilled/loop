@@ -33,7 +33,7 @@
                 "repeat-clause.scm"
                 "always-clause.scm"
                 "never-clause.scm"
-                ;"thereis-clause.scm"
+                "thereis-clause.scm"
                 "for-as-clause.scm"
                 "for-as-arithmetic-clause.scm"
                 "for-as-list-clause.scm"
