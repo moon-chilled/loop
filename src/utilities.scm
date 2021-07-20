@@ -57,8 +57,10 @@
 (define (generate-assignments d-var-spec form)
   (pidgin-destructuring-bind (temp-d-var-spec dictionary)
                              (fresh-variables d-var-spec)
-    `(let* ,(destructure-variables temp-d-var-spec form)
-       ,@(map (lambda (t) `(set! ,(car t) ,(cdr t))) dictionary))))
+    (if (null? dictionary)
+      ()
+      `(let* ,(destructure-variables temp-d-var-spec form)
+         ,@(map (lambda (t) `(set! ,(car t) ,(cdr t))) dictionary)))))
 
 ;;; Extract variables
 (define (extract-variables d-var-spec d-type-spec)
