@@ -29,7 +29,7 @@
 
 (define-parser initial-clause-parser
   (consecutive (lambda (initially compound+)
-                 (make-initial-clause
+                 (make-instance 'initial-clause
                    :form compound+))
                (keyword-parser 'initially)
                'compound+))

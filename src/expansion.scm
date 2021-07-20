@@ -72,16 +72,16 @@
            ,@acc)
        ,(do-clauses all-clauses end-tag))))
 
-(define (expand-body loop-body end-tag)
+(define (expand-body loop-body)
   (if (every pair? loop-body)
       (let ((tag (gensym)))
         `(call-with-exit
-           (lambda (return)
-           ,(transform-tagbody
-              `(,tag
-                ,@loop-body
-                (,tag))))))
-      (let ((clauses (parse-loop-body loop-body)))
+           (letrec ((,tag (lambda (return)
+                            ,@loop-body
+                            (,tag))))
+             ,tag)))
+      (let ((clauses (parse-loop-body loop-body))
+            (end-tag (gensym)))
         (analyze-clauses clauses)
         (let-temporarily ((*loop-name* (if (eq? 'name-clause ((car clauses) 'class-name))
                                          ((car clauses) 'name)
@@ -95,6 +95,7 @@
              (lambda (return)
                (call-with-exit
                  (lambda (,*loop-return-sym*)
-                   ,(expand-clauses clauses end-tag)))))))))
+                   (let ((loop-finish (macro () (,end-tag))))
+                     ,(expand-clauses clauses end-tag))))))))))
 
 (define (analyze-clauses clauses) ()) ;todo analysis.scm

@@ -22,7 +22,7 @@
     ;; Equivalent to (block return FORMS...)
 
     (define-macro (with-return . forms)
-                  `(block return ,@forms))
+                  `(,block return ,@forms))
 
     ;; (tagbody TAGS-AND-FORMS...)
     ;;

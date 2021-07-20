@@ -74,7 +74,7 @@
 ; lambda.  If 'm' is not bound, body will be evaluated instead.  If body is
 ; nil, an error will be signaled
 
-(define-expansion (defgeneric name pspec . body)
+(define-macro (defgeneric name pspec . body)
   `(define (,name ,@pspec)
      (if (eq? ,name (,(car pspec) ',name))
        ,(if (null? body) `(error ,(format #f "No method ~a bound" name)) `(begin ,@body))
@@ -84,7 +84,7 @@
 
 (define (type-specifier? x) (or (symbol? x) (eq? x #f)))
 
-(define-expansion (defclass name super slots . methods)
+(define-macro (defclass name super slots . methods)
   (when (*classes* name) (error "Class already defined: ~a" name))
   (let* ((super (map (lambda (s) (let ((r (*classes* s))) (unless r (error "No superclass ~a" s)) r)) super))
          (auxiliary-slots   (apply append (map (lambda (c) (c 'all-slots)) super)))
@@ -112,21 +112,14 @@
     (define (flatten-bindlist x)
       (apply append (map (lambda (x) (cons `',(car x) (cdr x))) x)))
     ; for some reason returning multiple values here doesn't work?
-    `(with-let (rootlet)
-       (set! (*classes* ',name)
-             (inlet 'all-slots ',all-slots
-                    'all-methods ',all-methods
-                    'class-name ',name
-                    'class-of #f
-                    'make (lambda* ,(car parm.bind)
-                            (let ((class-of (*classes* ',name))
-                                  (class-name ',name)
-                                  ,@(cdr parm.bind)
-                                  ,@all-methods)
-                              (curlet)))))
-       (set! ((*classes* ',name) 'class-of) (*classes* ',name))
-      ,(let ((p (gensym)))
-         `(define (,(string->symbol (format #f "make-~a" name)) . ,p)
-            (apply ((*classes* ',name) 'make) ,p))))))
+    `(set! (*classes* ',name)
+           (inlet 'all-slots ',all-slots
+                  'all-methods ',all-methods
+                  'class-name ',name
+                  'make (lambda* ,(car parm.bind)
+                          (let ((class-name ',name)
+                                ,@(cdr parm.bind)
+                                ,@all-methods)
+                            (curlet)))))))
 (define (make-instance what . p)
   (apply ((*classes* what) 'make) p))

@@ -29,7 +29,7 @@
 
 (define-parser final-clause-parser
   (consecutive (lambda (finally compound+)
-                 (make-final-clause
+                 (make-instance 'final-clause
                    :form compound+))
                (keyword-parser 'finally)
                compound+))

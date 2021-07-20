@@ -113,7 +113,7 @@
 ;;; We try this parser first.
 (define-parser with-subclause-type-1-parser
   (consecutive (lambda (var-spec type-spec = form)
-                 (make-with-subclause-with-form
+                 (make-instance 'with-subclause-with-form
                    :var-spec var-spec
                    :type-spec type-spec
                    :form form))
@@ -126,7 +126,7 @@
 ;;; Parser for var [type-spec]
 (define-parser with-subclause-type-2-parser
   (consecutive (lambda (var-spec type-spec)
-                 (make-with-subclause-no-form
+                 (make-instance 'with-subclause-no-form
                    :var-spec var-spec
                    :type-spec type-spec))
                ;; Accept anything for now.  Analyze later.
@@ -148,7 +148,7 @@
 ;;; Parser for a with clause
 (define-parser with-clause-parser
   (consecutive (lambda (with first rest)
-                 (make-with-clause
+                 (make-instance 'with-clause
                    :subclauses (cons first rest)))
                (keyword-parser 'with)
                with-subclause-no-keyword-parser
