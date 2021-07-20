@@ -32,7 +32,7 @@
                 "while-until-clauses.scm"
                 "repeat-clause.scm"
                 "always-clause.scm"
-                ;"never-clause.scm"
+                "never-clause.scm"
                 ;"thereis-clause.scm"
                 "for-as-clause.scm"
                 "for-as-arithmetic-clause.scm"

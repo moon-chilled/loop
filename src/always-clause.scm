@@ -1,6 +1,6 @@
 (defclass always-clause (termination-test-clause form-mixin) ()
   (accumulation-variables (clause)
-    `((nil always/never t)))
+    `((nil always/never t))) ;nil?
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
