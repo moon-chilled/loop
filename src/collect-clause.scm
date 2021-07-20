@@ -12,7 +12,7 @@
          (begin (set-cdr! ,*list-tail-accumulation-variable*
                           (list ,*it-var*))
                 (set! ,*list-tail-accumulation-variable*
-                      (cdr ,*list-tail-accumulation-variable*)))))) ;should this be last-pair?
+                      (cdr ,*list-tail-accumulation-variable*)))))) ;should this be last?
 
 (defclass collect-form-clause (collect-clause form-mixin)
   ()
@@ -24,7 +24,7 @@
               (set! ,*accumulation-variable*
                     ,*list-tail-accumulation-variable*))
        (begin (set! ,*list-tail-accumulation-variable*
-                    (,last-pair ,*list-tail-accumulation-variable*))
+                    (,last ,*list-tail-accumulation-variable*))
               (set-cdr! ,*list-tail-accumulation-variable*
                         (list-values ,(clause 'form)))))))
 
@@ -52,7 +52,7 @@
               (set! ,(clause 'into-var)
                     ,(tail-variable (clause 'into-var))))
        (begin (set! ,(tail-variable (clause 'into-var))
-                    (,last-pair ,(tail-variable (clause 'into-var))))
+                    (,last ,(tail-variable (clause 'into-var))))
               (set-cdr! ,(tail-variable (clause 'into-var))
                         (list-values ,(clause 'form)))))))
 

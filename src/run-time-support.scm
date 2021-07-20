@@ -49,7 +49,10 @@
              :datum x
              :expected-type 'list)))
 
-(define (last-pair x)
+(define (last x)
   (if (null? (cdr x))
     x
-    (last-pair (cdr x))))
+    (last (cdr x))))
+
+(define (copy-list x)
+  (if (null? x) '() (cons (car x) (copy-list (cdr x)))))
