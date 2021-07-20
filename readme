@@ -26,7 +26,7 @@ Additional notes:
     E.G. (loop repeat 1) #| --> () |#
 - Type specifiers are parsed, but largely ignored.  The exception is the above:
   (loop with x fixnum return x) #| --> 0 |#
-  I'm not sure what more there is to do with those; suggestions welcome!
+  I'm not sure what more there is to do with them; suggestions welcome!
 - When destructuring, the catch-all no-bind is ().  E.G.
   (loop with (x () y) = '(1 2 3 4) return whatever)
   ←→ (let ((x 1) (y 3)) whatever)
@@ -39,5 +39,5 @@ Todo:
 - Collect a vector/string instead of a list
 - Collect into a lazy iterator?
 - Max/min that never executes should return -inf/inf
-- Rewrite jumping mechanism to use call-with-exit instead of throw/catch
+- Rewrite control-flow mechanism to use call-with-exit instead of throw/catch
 - Fix loop-finish (or elide?)
