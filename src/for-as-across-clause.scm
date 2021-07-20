@@ -27,7 +27,13 @@
   ;;; Compute bindings.
   
   (initial-bindings (clause)
-    `((,(clause 'form-var) (make-iterator ,(clause 'iterator-form) (cons '() '())))
+    `((,(clause 'form-var) (make-iterator ,(clause 'iterator-form)
+                                          ; if we're not destructuring, user expects unique pairs
+                                          ; but if we are, user never gets at the pairs
+                                          ; so we're free to reuse
+                                          ,@(if (pair? (clause 'var-spec))
+                                              '((cons '() '()))
+                                              '())))
       (,(clause 'next-item-var) #<undefined>)))
   
   (final-bindings (clause)
