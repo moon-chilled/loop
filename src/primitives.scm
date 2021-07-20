@@ -126,10 +126,6 @@
          (all-slots (remove-duplicates-from-end `(,@auxiliary-slots ,@slots) (compose eq? car)))
          (all-methods (remove-duplicates-from-end `(,@auxiliary-methods ,@accessor-methods ,@methods) (compose eq? car)))
          (classes (cons name (remove-duplicates (apply append (map (lambda (x) (x 'classes)) super)) eq?))))
-    ; turns ((a b) (x y)) into ('a b 'x y)
-    (define (flatten-bindlist x)
-      (apply append (map (lambda (x) (cons `',(car x) (cdr x))) x)))
-    ; for some reason returning multiple values here doesn't work?
     `(set! (*classes* ',name)
            (inlet 'all-slots ',all-slots
                   'all-methods ',all-methods
