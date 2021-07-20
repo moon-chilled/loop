@@ -14,7 +14,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute body-form.
-  
+
   (body-form (clause end-tag)
     (let-temporarily ((*it-var* (gensym)))
       `(let ((,*it-var* ,(clause 'condition)))
@@ -27,7 +27,7 @@
                ,@(map (lambda (clause)
                            (body-form clause end-tag))
                          (clause 'else-clauses))))))))
-  
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Parsers.
@@ -62,7 +62,7 @@
                anything-parser
                then-or-else-parser
                (keyword-parser 'end)))
-               
+
 (define-parser if-else-clause-parser
   (consecutive (lambda (if form then-clauses else else-clauses)
                  (make-instance 'conditional-clause
@@ -116,7 +116,7 @@
                anything-parser
                then-or-else-parser
                (keyword-parser 'end)))
-               
+
 (define-parser unless-else-clause-parser
   (consecutive (lambda (unless form else-clauses else then-clauses)
                  (make-instance 'conditional-clause

@@ -39,7 +39,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the bindings.
-  
+
   (initial-bindings (clause)
     (let ((order (clause 'order)))
       (cond ((equal? order '(from to by))
@@ -82,7 +82,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute subclause wrapping.
-  
+
   (wrap-subclause (subclause inner-form)
     (if (null? (subclause 'var-spec))
         `(let ((,(subclause 'temp-var) ,(subclause 'start-var)))
@@ -109,7 +109,7 @@
                   ,(clause 'temp-var)
                   ,(clause 'end-var))
            (,end-tag))))
-  
+
   (step-form (clause)
     (if (null? (clause 'var-spec))
         `(set! ,(clause 'temp-var) (+ ,(clause 'temp-var) ,(clause 'by-var)))
@@ -133,12 +133,12 @@
                  ,(clause 'end-var)
                  ,(clause 'temp-var))
           (,end-tag))))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the step-form.
-  
-  
+
+
   (step-form (clause)
     (if (null? (clause 'var-spec))
         `(set! ,(clause 'temp-var) (- ,(clause 'temp-var) ,(clause 'by-var)))

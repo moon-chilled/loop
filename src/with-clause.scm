@@ -64,7 +64,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the declarations.
-  
+
   (declarations (clause)
     (apply append (map declarations (clause 'subclauses)))))
 

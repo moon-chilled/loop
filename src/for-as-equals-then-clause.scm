@@ -11,33 +11,33 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the bindings.
-  
+
   (initial-bindings (clause)
     (let ((d-var-spec (clause 'var-spec))
           (d-type-spec (clause 'type-spec)))
       (map (compose (rbind list #<undefined>) car) (extract-variables d-var-spec d-type-spec))))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the declarations.
-  
+
   (declarations (clause)
     '()) ;todo...?
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the prologue-form.
-  
+
   (prologue-form (clause end-tag)
     (pidgin-destructuring-bind (temp-tree dictionary)
         (fresh-variables (clause 'var-spec))
       `(let* ,(destructure-variables temp-tree (clause 'initial-form))
          ,@(map (lambda (ot) `(set! ,(car ot) ,(cdr ot))) dictionary))))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the step-form.
-  
+
   (step-form (clause)
     (pidgin-destructuring-bind (temp-tree dictionary)
         (fresh-variables (clause 'var-spec))

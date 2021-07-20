@@ -4,40 +4,40 @@
 ;;;
 ;;; The HyperSpec says that a FOR-AS-CLAUSE has the following syntax:
 ;;;
-;;;    for-as-clause ::= {for | as} for-as-subclause {and for-as-subclause}* 
-;;;    for-as-subclause::= for-as-arithmetic | for-as-in-list | 
-;;;                        for-as-on-list | for-as-equals-then | 
-;;;                        for-as-across | for-as-hash | for-as-package 
+;;;    for-as-clause ::= {for | as} for-as-subclause {and for-as-subclause}*
+;;;    for-as-subclause::= for-as-arithmetic | for-as-in-list |
+;;;                        for-as-on-list | for-as-equals-then |
+;;;                        for-as-across | for-as-hash | for-as-package
 ;;;
 ;;; For the purpose of specialization, we need different names for the
 ;;; main clauses as well as for the subclauses, so we alter this
 ;;; grammar a bit and define it like this instead:
 ;;;
-;;;    for-as-clause::= 
-;;;      for-as-arithmetic-clause | for-as-in-list-clause | 
-;;;      for-as-on-list-clause | for-as-equals-then-clause | 
+;;;    for-as-clause::=
+;;;      for-as-arithmetic-clause | for-as-in-list-clause |
+;;;      for-as-on-list-clause | for-as-equals-then-clause |
 ;;;      for-as-across-clause | for-as-hash-clause | for-as-package-clause
-;;;    
+;;;
 ;;;    for-as-arithmetic-clause ::=
-;;;      {for | as} for-as-arithmetic {and for-as-subclause}* 
-;;;    
+;;;      {for | as} for-as-arithmetic {and for-as-subclause}*
+;;;
 ;;;    for-as-in-list-clause ::=
-;;;      {for | as} for-as-in-list {and for-as-subclause}* 
-;;;    
+;;;      {for | as} for-as-in-list {and for-as-subclause}*
+;;;
 ;;;    for-as-on-list-clause ::=
-;;;      {for | as} for-as-on-list {and for-as-subclause}* 
-;;;    
+;;;      {for | as} for-as-on-list {and for-as-subclause}*
+;;;
 ;;;    for-as-equals-then-clause ::=
-;;;      {for | as} for-as-equals-then {and for-as-subclause}* 
-;;;    
+;;;      {for | as} for-as-equals-then {and for-as-subclause}*
+;;;
 ;;;    for-as-across-clause ::=
-;;;      {for | as} for-as-across {and for-as-subclause}* 
+;;;      {for | as} for-as-across {and for-as-subclause}*
 ;;;
 ;;;    for-as-hash-clause ::=
-;;;      {for | as} for-as-hash {and for-as-subclause}* 
+;;;      {for | as} for-as-hash {and for-as-subclause}*
 ;;;
 ;;;    for-as-package-clause ::=
-;;;      {for | as} for-as-package {and for-as-subclause}* 
+;;;      {for | as} for-as-package {and for-as-subclause}*
 
 (defclass for-as-clause (variable-clause subclauses-mixin) ()
   (bound-variables (clause)
@@ -47,10 +47,10 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the bindings.
-  
+
   (initial-bindings (clause)
     (apply append (map initial-bindings (clause 'subclauses))))
-  
+
   (final-bindings (clause)
     (apply append (map final-bindings (clause 'subclauses))))
 
@@ -58,41 +58,41 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the declarations.
-  
+
   (declarations (clause)
     (apply append (map declarations (clause 'subclauses))))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the prologue-form.
-  
+
   (prologue-form (clause end-tag)
     `(begin ,@(map (lambda (subclause)
                      (prologue-form subclause end-tag))
                    (clause 'subclauses))))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the termination-form.
-  
+
   (termination-form (clause end-tag)
     `(begin ,@(map (lambda (subclause)
                         (termination-form subclause end-tag))
                       (clause 'subclauses))))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the body-form.
-  
+
   (body-form (clause end-tag)
     `(begin ,@(map (lambda (clause)
                         (body-form clause end-tag))
                       (clause 'subclauses))))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Step a FOR-AS clause.
-  
+
   (step-form (clause)
     `(begin ,@(map step-form (clause 'subclauses)))))
 
@@ -102,7 +102,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Manage a list of FOR-AS subclause parsers. 
+;;; Manage a list of FOR-AS subclause parsers.
 
 (define *for-as-subclause-parsers* '())
 

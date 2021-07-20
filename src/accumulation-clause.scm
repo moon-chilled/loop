@@ -15,7 +15,7 @@
   ;;;
   ;;; Method on ACCUMULATION-VARIABLES, valid for all accumulation
   ;;; clauses.
-  
+
   (accumulation-variables (clause)
     `((,(clause 'into-var)
        ,(clause 'accumulation-category)

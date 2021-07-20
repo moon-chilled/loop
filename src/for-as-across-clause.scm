@@ -21,11 +21,11 @@
   (bound-variables (clause)
     (map car
          (extract-variables (clause 'var-spec) #f)))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute bindings.
-  
+
   (initial-bindings (clause)
     `((,(clause 'form-var) (make-iterator ,(clause 'iterator-form)
                                           ; if we're not destructuring, user expects unique pairs
@@ -35,21 +35,21 @@
                                               '((cons '() '()))
                                               '())))
       (,(clause 'next-item-var) #<undefined>)))
-  
+
   (final-bindings (clause)
     `(,@(map (compose (rbind list #<undefined>) car) (clause 'dictionary))))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute declarations.
-  
+
   (declarations (clause)
     '()) ;todo
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute prologue-form.
-  
+
   (prologue-form (clause end-tag)
     `(begin (set! ,(clause 'next-item-var) (,(clause 'form-var)))
             ,(termination-form clause end-tag)
@@ -60,15 +60,15 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute termination-form
-  
+
   (termination-form (clause end-tag)
     `(when (iterator-at-end? ,(clause 'form-var))
        (,end-tag)))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute step-form.
-  
+
   (step-form (clause)
     `(begin ,(generate-assignments (clause 'var-spec)
                                    (clause 'next-item-var))

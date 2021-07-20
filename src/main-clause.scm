@@ -1,6 +1,6 @@
 ;;; In the dictionary entry for LOOP, the HyperSpec says:
 ;;;
-;;;   main-clause ::= unconditional | 
+;;;   main-clause ::= unconditional |
 ;;;                   accumulation |
 ;;;                   conditional |
 ;;;                   termination-test |
@@ -20,14 +20,14 @@
 ;;; that they are neither main clauses nor variable clauses.
 ;;; Therefore, here, we have:
 ;;;
-;;;   main-clause ::= unconditional | 
+;;;   main-clause ::= unconditional |
 ;;;                   accumulation |
 ;;;                   conditional |
 ;;;                   termination-test
 ;;;
 ;;; Furthermore, the HyperSpec defines selectable-clause like this:
 ;;;
-;;;   selectable-clause ::= unconditional | accumulation | conditional 
+;;;   selectable-clause ::= unconditional | accumulation | conditional
 ;;;
 ;;; so we can say:
 ;;;

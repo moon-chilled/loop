@@ -2,11 +2,11 @@
 ;;;
 ;;; Parser for d-var-spec.
 
-;;; A d-var-spec is a is a destructuring variable specifier: 
-;;; 
+;;; A d-var-spec is a is a destructuring variable specifier:
+;;;
 ;;;    d-var-spec ::= simple-var | nil | (d-var-spec . d-var-spec)
 ;;;
-;;; where simple-var is a symbol (a name of a variable). 
+;;; where simple-var is a symbol (a name of a variable).
 ;;;
 
 ;;; Return true if and only if the argument is a valid d-var-spec, in

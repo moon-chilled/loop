@@ -85,7 +85,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Manage a list of clause parsers. 
+;;; Manage a list of clause parsers.
 
 (define *clause-parsers* '())
 

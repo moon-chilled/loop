@@ -4,7 +4,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the body-form
-  
+
   (body-form (clause end-tag)
     `(unless ,(clause 'form)
        (,end-tag))))
@@ -28,5 +28,5 @@
                    :form `(not ,form)))
                (keyword-parser 'until)
                anything-parser))
-  
+
 (add-clause-parser until-clause-parser)

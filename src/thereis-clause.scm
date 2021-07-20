@@ -1,11 +1,11 @@
 (defclass thereis-clause (termination-test-clause form-mixin) ()
   (accumulation-variables (clause)
     `((nil thereis t)))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the body-form
-  
+
   (body-form (clause end-tag)
     `(let ((temp ,(clause 'form)))
        (when temp

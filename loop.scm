@@ -647,7 +647,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Manage a list of clause parsers. 
+;;; Manage a list of clause parsers.
 
 (define *clause-parsers* '())
 
@@ -846,7 +846,7 @@
                      ,(expand-clauses clauses end-tag))))))))))
 ;;; In the dictionary entry for LOOP, the HyperSpec says:
 ;;;
-;;;   main-clause ::= unconditional | 
+;;;   main-clause ::= unconditional |
 ;;;                   accumulation |
 ;;;                   conditional |
 ;;;                   termination-test |
@@ -866,14 +866,14 @@
 ;;; that they are neither main clauses nor variable clauses.
 ;;; Therefore, here, we have:
 ;;;
-;;;   main-clause ::= unconditional | 
+;;;   main-clause ::= unconditional |
 ;;;                   accumulation |
 ;;;                   conditional |
 ;;;                   termination-test
 ;;;
 ;;; Furthermore, the HyperSpec defines selectable-clause like this:
 ;;;
-;;;   selectable-clause ::= unconditional | accumulation | conditional 
+;;;   selectable-clause ::= unconditional | accumulation | conditional
 ;;;
 ;;; so we can say:
 ;;;
@@ -906,7 +906,7 @@
     '()))
 ;;; Recall that in the dictionary entry for LOOP, the HyperSpec says:
 ;;;
-;;;   main-clause ::= unconditional | 
+;;;   main-clause ::= unconditional |
 ;;;                   accumulation |
 ;;;                   conditional |
 ;;;                   termination-test |
@@ -914,14 +914,14 @@
 ;;;
 ;;; Though here, we exclude initial-final so that we have:
 ;;;
-;;;   main-clause ::= unconditional | 
+;;;   main-clause ::= unconditional |
 ;;;                   accumulation |
 ;;;                   conditional |
 ;;;                   termination-test
 ;;;
 ;;; Furthermore, the HyperSpec defines selectable-clause like this:
 ;;;
-;;;   selectable-clause ::= unconditional | accumulation | conditional 
+;;;   selectable-clause ::= unconditional | accumulation | conditional
 ;;;
 ;;; so we can say:
 ;;;
@@ -970,7 +970,7 @@
   ;;;
   ;;; Method on ACCUMULATION-VARIABLES, valid for all accumulation
   ;;; clauses.
-  
+
   (accumulation-variables (clause)
     `((,(clause 'into-var)
        ,(clause 'accumulation-category)
@@ -1037,11 +1037,11 @@
 ;;;
 ;;; Parser for d-var-spec.
 
-;;; A d-var-spec is a is a destructuring variable specifier: 
-;;; 
+;;; A d-var-spec is a is a destructuring variable specifier:
+;;;
 ;;;    d-var-spec ::= simple-var | nil | (d-var-spec . d-var-spec)
 ;;;
-;;; where simple-var is a symbol (a name of a variable). 
+;;; where simple-var is a symbol (a name of a variable).
 ;;;
 
 ;;; Return true if and only if the argument is a valid d-var-spec, in
@@ -1126,7 +1126,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute prologue-form.
-  
+
   (prologue-form (clause end-tag)
     (clause 'form)))
 
@@ -1163,7 +1163,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute epilogue.
-  
+
   (epilogue-form (clause)
     (clause 'form)))
 
@@ -1245,7 +1245,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the declarations.
-  
+
   (declarations (clause)
     (apply append (map declarations (clause 'subclauses)))))
 
@@ -2086,7 +2086,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute body-form.
-  
+
   (body-form (clause end-tag)
     (let-temporarily ((*it-var* (gensym)))
       `(let ((,*it-var* ,(clause 'condition)))
@@ -2099,7 +2099,7 @@
                ,@(map (lambda (clause)
                            (body-form clause end-tag))
                          (clause 'else-clauses))))))))
-  
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Parsers.
@@ -2134,7 +2134,7 @@
                anything-parser
                then-or-else-parser
                (keyword-parser 'end)))
-               
+
 (define-parser if-else-clause-parser
   (consecutive (lambda (if form then-clauses else else-clauses)
                  (make-instance 'conditional-clause
@@ -2188,7 +2188,7 @@
                anything-parser
                then-or-else-parser
                (keyword-parser 'end)))
-               
+
 (define-parser unless-else-clause-parser
   (consecutive (lambda (unless form else-clauses else then-clauses)
                  (make-instance 'conditional-clause
@@ -2230,7 +2230,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the body-form
-  
+
   (body-form (clause end-tag)
     `(unless ,(clause 'form)
        (,end-tag))))
@@ -2254,7 +2254,7 @@
                    :form `(not ,form)))
                (keyword-parser 'until)
                anything-parser))
-  
+
 (add-clause-parser until-clause-parser)
 (defclass repeat-clause (termination-test-clause var-and-type-spec-mixin)
   (form
@@ -2264,37 +2264,37 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the bindings.
-  
+
   (initial-bindings (clause)
     `((,(clause 'var-spec) ,(clause 'form))))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the declarations.
-  
+
   (declarations (clause)
     '())
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the prologue-form.
-  
+
   (prologue-form (clause end-tag)
     `(when (<= ,(clause 'var-spec) 0)
        (,end-tag)))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the termination-form.
-  
+
   (termination-form (clause end-tag)
     `(when (<= ,(clause 'var-spec) 1)
        (,end-tag)))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the step-form.
-  
+
   (step-form (clause)
     `(set! ,(clause 'var-spec) (- ,(clause 'var-spec) 1))))
 
@@ -2316,7 +2316,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the body-form
-  
+
   (body-form (clause end-tag)
     `(unless ,(clause 'form)
        (,*loop-return-sym*))))
@@ -2348,11 +2348,11 @@
 (defclass thereis-clause (termination-test-clause form-mixin) ()
   (accumulation-variables (clause)
     `((nil thereis t)))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the body-form
-  
+
   (body-form (clause end-tag)
     `(let ((temp ,(clause 'form)))
        (when temp
@@ -2377,40 +2377,40 @@
 ;;;
 ;;; The HyperSpec says that a FOR-AS-CLAUSE has the following syntax:
 ;;;
-;;;    for-as-clause ::= {for | as} for-as-subclause {and for-as-subclause}* 
-;;;    for-as-subclause::= for-as-arithmetic | for-as-in-list | 
-;;;                        for-as-on-list | for-as-equals-then | 
-;;;                        for-as-across | for-as-hash | for-as-package 
+;;;    for-as-clause ::= {for | as} for-as-subclause {and for-as-subclause}*
+;;;    for-as-subclause::= for-as-arithmetic | for-as-in-list |
+;;;                        for-as-on-list | for-as-equals-then |
+;;;                        for-as-across | for-as-hash | for-as-package
 ;;;
 ;;; For the purpose of specialization, we need different names for the
 ;;; main clauses as well as for the subclauses, so we alter this
 ;;; grammar a bit and define it like this instead:
 ;;;
-;;;    for-as-clause::= 
-;;;      for-as-arithmetic-clause | for-as-in-list-clause | 
-;;;      for-as-on-list-clause | for-as-equals-then-clause | 
+;;;    for-as-clause::=
+;;;      for-as-arithmetic-clause | for-as-in-list-clause |
+;;;      for-as-on-list-clause | for-as-equals-then-clause |
 ;;;      for-as-across-clause | for-as-hash-clause | for-as-package-clause
-;;;    
+;;;
 ;;;    for-as-arithmetic-clause ::=
-;;;      {for | as} for-as-arithmetic {and for-as-subclause}* 
-;;;    
+;;;      {for | as} for-as-arithmetic {and for-as-subclause}*
+;;;
 ;;;    for-as-in-list-clause ::=
-;;;      {for | as} for-as-in-list {and for-as-subclause}* 
-;;;    
+;;;      {for | as} for-as-in-list {and for-as-subclause}*
+;;;
 ;;;    for-as-on-list-clause ::=
-;;;      {for | as} for-as-on-list {and for-as-subclause}* 
-;;;    
+;;;      {for | as} for-as-on-list {and for-as-subclause}*
+;;;
 ;;;    for-as-equals-then-clause ::=
-;;;      {for | as} for-as-equals-then {and for-as-subclause}* 
-;;;    
+;;;      {for | as} for-as-equals-then {and for-as-subclause}*
+;;;
 ;;;    for-as-across-clause ::=
-;;;      {for | as} for-as-across {and for-as-subclause}* 
+;;;      {for | as} for-as-across {and for-as-subclause}*
 ;;;
 ;;;    for-as-hash-clause ::=
-;;;      {for | as} for-as-hash {and for-as-subclause}* 
+;;;      {for | as} for-as-hash {and for-as-subclause}*
 ;;;
 ;;;    for-as-package-clause ::=
-;;;      {for | as} for-as-package {and for-as-subclause}* 
+;;;      {for | as} for-as-package {and for-as-subclause}*
 
 (defclass for-as-clause (variable-clause subclauses-mixin) ()
   (bound-variables (clause)
@@ -2420,10 +2420,10 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the bindings.
-  
+
   (initial-bindings (clause)
     (apply append (map initial-bindings (clause 'subclauses))))
-  
+
   (final-bindings (clause)
     (apply append (map final-bindings (clause 'subclauses))))
 
@@ -2431,41 +2431,41 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the declarations.
-  
+
   (declarations (clause)
     (apply append (map declarations (clause 'subclauses))))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the prologue-form.
-  
+
   (prologue-form (clause end-tag)
     `(begin ,@(map (lambda (subclause)
                      (prologue-form subclause end-tag))
                    (clause 'subclauses))))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the termination-form.
-  
+
   (termination-form (clause end-tag)
     `(begin ,@(map (lambda (subclause)
                         (termination-form subclause end-tag))
                       (clause 'subclauses))))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the body-form.
-  
+
   (body-form (clause end-tag)
     `(begin ,@(map (lambda (clause)
                         (body-form clause end-tag))
                       (clause 'subclauses))))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Step a FOR-AS clause.
-  
+
   (step-form (clause)
     `(begin ,@(map step-form (clause 'subclauses)))))
 
@@ -2475,7 +2475,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Manage a list of FOR-AS subclause parsers. 
+;;; Manage a list of FOR-AS subclause parsers.
 
 (define *for-as-subclause-parsers* '())
 
@@ -2554,7 +2554,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the bindings.
-  
+
   (initial-bindings (clause)
     (let ((order (clause 'order)))
       (cond ((equal? order '(from to by))
@@ -2597,7 +2597,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute subclause wrapping.
-  
+
   (wrap-subclause (subclause inner-form)
     (if (null? (subclause 'var-spec))
         `(let ((,(subclause 'temp-var) ,(subclause 'start-var)))
@@ -2624,7 +2624,7 @@
                   ,(clause 'temp-var)
                   ,(clause 'end-var))
            (,end-tag))))
-  
+
   (step-form (clause)
     (if (null? (clause 'var-spec))
         `(set! ,(clause 'temp-var) (+ ,(clause 'temp-var) ,(clause 'by-var)))
@@ -2648,12 +2648,12 @@
                  ,(clause 'end-var)
                  ,(clause 'temp-var))
           (,end-tag))))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the step-form.
-  
-  
+
+
   (step-form (clause)
     (if (null? (clause 'var-spec))
         `(set! ,(clause 'temp-var) (- ,(clause 'temp-var) ,(clause 'by-var)))
@@ -3352,13 +3352,13 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the bindings.
-  
+
   (initial-bindings (clause)
     `((,(clause 'list-var) ,(clause 'list-form))
       ,@(if (simple-by-form? (clause 'by-form))
             '()
             `((,(clause 'by-var) ,(clause 'by-form))))))
-  
+
   (final-bindings (clause)
     `((,(clause 'rest-var) ,(clause 'list-var))
       ,@(let ((d-var-spec (clause 'var-spec))
@@ -3372,7 +3372,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the declarations.
-  
+
   (declarations (clause)
     '()) ;todo
   )
@@ -3394,7 +3394,7 @@
   (termination-form (clause end-tag)
     `(when (null? ,(clause 'rest-var))
        (,end-tag)))
-  
+
   (step-form ((clause for-as-in-list))
     `(begin ,(generate-assignments (clause 'var-spec) `(car ,(clause 'rest-var)))
             (set! ,(clause 'rest-var)
@@ -3447,7 +3447,7 @@
             ,(generate-assignments (clause 'var-spec) (clause 'rest-var))
             (set! ,(clause 'rest-var)
                   (,(if (simple-by-form? (clause 'by-form)) (clause 'by-form) (clause 'by-var)) ,(clause 'rest-var)))))
-  
+
   (termination-form (clause end-tag)
     `(unless (pair? ,(clause 'rest-var))
        (,end-tag)))
@@ -3501,33 +3501,33 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the bindings.
-  
+
   (initial-bindings (clause)
     (let ((d-var-spec (clause 'var-spec))
           (d-type-spec (clause 'type-spec)))
       (map (compose (rbind list #<undefined>) car) (extract-variables d-var-spec d-type-spec))))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the declarations.
-  
+
   (declarations (clause)
     '()) ;todo...?
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the prologue-form.
-  
+
   (prologue-form (clause end-tag)
     (pidgin-destructuring-bind (temp-tree dictionary)
         (fresh-variables (clause 'var-spec))
       `(let* ,(destructure-variables temp-tree (clause 'initial-form))
          ,@(map (lambda (ot) `(set! ,(car ot) ,(cdr ot))) dictionary))))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the step-form.
-  
+
   (step-form (clause)
     (pidgin-destructuring-bind (temp-tree dictionary)
         (fresh-variables (clause 'var-spec))
@@ -3593,11 +3593,11 @@
   (bound-variables (clause)
     (map car
          (extract-variables (clause 'var-spec) #f)))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute bindings.
-  
+
   (initial-bindings (clause)
     `((,(clause 'form-var) (make-iterator ,(clause 'iterator-form)
                                           ; if we're not destructuring, user expects unique pairs
@@ -3607,21 +3607,21 @@
                                               '((cons '() '()))
                                               '())))
       (,(clause 'next-item-var) #<undefined>)))
-  
+
   (final-bindings (clause)
     `(,@(map (compose (rbind list #<undefined>) car) (clause 'dictionary))))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute declarations.
-  
+
   (declarations (clause)
     '()) ;todo
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute prologue-form.
-  
+
   (prologue-form (clause end-tag)
     `(begin (set! ,(clause 'next-item-var) (,(clause 'form-var)))
             ,(termination-form clause end-tag)
@@ -3632,15 +3632,15 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute termination-form
-  
+
   (termination-form (clause end-tag)
     `(when (iterator-at-end? ,(clause 'form-var))
        (,end-tag)))
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute step-form.
-  
+
   (step-form (clause)
     `(begin ,(generate-assignments (clause 'var-spec)
                                    (clause 'next-item-var))

@@ -19,7 +19,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute prologue-form.
-  
+
   (prologue-form (clause end-tag)
     (clause 'form)))
 

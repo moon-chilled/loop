@@ -5,7 +5,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the body-form
-  
+
   (body-form (clause end-tag)
     `(unless ,(clause 'form)
        (,*loop-return-sym*))))

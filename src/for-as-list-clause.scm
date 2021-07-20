@@ -8,13 +8,13 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the bindings.
-  
+
   (initial-bindings (clause)
     `((,(clause 'list-var) ,(clause 'list-form))
       ,@(if (simple-by-form? (clause 'by-form))
             '()
             `((,(clause 'by-var) ,(clause 'by-form))))))
-  
+
   (final-bindings (clause)
     `((,(clause 'rest-var) ,(clause 'list-var))
       ,@(let ((d-var-spec (clause 'var-spec))
@@ -28,7 +28,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the declarations.
-  
+
   (declarations (clause)
     '()) ;todo
   )
@@ -50,7 +50,7 @@
   (termination-form (clause end-tag)
     `(when (null? ,(clause 'rest-var))
        (,end-tag)))
-  
+
   (step-form ((clause for-as-in-list))
     `(begin ,(generate-assignments (clause 'var-spec) `(car ,(clause 'rest-var)))
             (set! ,(clause 'rest-var)
@@ -103,7 +103,7 @@
             ,(generate-assignments (clause 'var-spec) (clause 'rest-var))
             (set! ,(clause 'rest-var)
                   (,(if (simple-by-form? (clause 'by-form)) (clause 'by-form) (clause 'by-var)) ,(clause 'rest-var)))))
-  
+
   (termination-form (clause end-tag)
     `(unless (pair? ,(clause 'rest-var))
        (,end-tag)))

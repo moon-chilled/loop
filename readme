@@ -29,7 +29,7 @@ Additional notes:
   I'm not sure what more there is to do with those; suggestions welcome!
 - When destructuring, the catch-all no-bind is ().  E.G.
   (loop with (x () y) = '(1 2 3 4) return whatever)
-  ←→ (let ((x 1) (y 3)) whatever) 
+  ←→ (let ((x 1) (y 3)) whatever)
   In this case, () is the empty (de)structure which matches everything, binds
   nothing, and places no constraints; a case where (imho) null being a special
   object rather than a symbol leads to more elegant formulations.
