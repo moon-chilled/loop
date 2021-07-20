@@ -1,11 +1,14 @@
 ;;; This function is called in a SUM clause in order to sum the
 ;;; accumulated value with the new one.
-(define (sum x y)
-  (unless (number? y)
-    (error 'sum-argument-must-be-number
-           :datum y
-           :expected-type 'number))
-  (+ x y))
+(define (sum x . y)
+  (for-each (lambda (y)
+              (unless (number? y)
+                (error 'sum-argument-must-be-number
+                       :datum y
+                       :expected-type 'number))
+              (set! x (+ x y)) y)
+            y)
+  x)
 
 ;;; This function is called in MAX and MIN clauses to ensure that new values
 ;;; are real.
@@ -19,15 +22,19 @@
 
 ;;; This function is called in a MAX clause in order to compute the
 ;;; max of the accumulated value and the new one.
-(define (maximize x y)
-  (ensure-real y 'max-argument-must-be-real)
-  (max x y))
+(define (maximize x . y)
+  (for-each (lambda (y)
+              (set! x (max x (ensure-real y 'max-argument-must-be-real))))
+            y)
+  x)
 
 ;;; This function is called in a MIN clause in order to compute the
 ;;; min of the accumulated value and the new one.
-(define (minimize x y)
-  (ensure-real y 'min-argument-must-be-real)
-  (min x y))
+(define (minimize x . y)
+  (for-each (lambda (y)
+              (set! x (min x (ensure-real y 'min-argument-must-be-real))))
+            y)
+  x)
 
 ;;; This function is called during restructuring to compute the CAR of
 ;;; some value.  If that value turns out not to be a LIST, then an

@@ -8,7 +8,7 @@
 (defclass sum-form-clause (sum-clause form-mixin) ()
   (body-form (clause end-tag)
       `(set! ,*accumulation-variable*
-         (,sum ,*accumulation-variable* ,(clause 'form)))))
+         (apply ,sum ,*accumulation-variable* (list-values ,(clause 'form))))))
 
 (defclass sum-it-into-clause (into-mixin sum-clause it-mixin) ()
   (body-form (clause end-tag)
@@ -18,7 +18,7 @@
 (defclass sum-form-into-clause (into-mixin sum-clause form-mixin) ()
   (body-form (clause end-tag)
     `(set! ,(clause 'into-var)
-           (,sum ,(clause 'into-var) ,(clause 'form)))))
+           (apply ,sum ,(clause 'into-var) (list-values ,(clause 'form))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

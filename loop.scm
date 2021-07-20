@@ -188,20 +188,6 @@
          (methods (map (lambda (m) `(,(car m) (lambda* ,(cadr m) ,@(cddr m)))) methods))
          (slots (map (lambda (s) (if (pair? s) s `(,s (error ,(format #f "No initializer supplied for slot ~a" s))))) slots))
          (accessor-methods '())
-         (parm.bind (let* ((parm '())
-                           (bindings '())
-                           (dostuff (lambda (inherited p)
-                                      (let ((s (symbol->string (car p))))
-                                        (if (char=? (s 0) #\%)
-                                          (let ((ns (string->symbol (substring s 1))))
-                                            (push (list ns (cadr p)) parm)
-                                            (push (list (car p) ns) bindings)
-                                            (unless inherited
-                                              (push (let ((v (gensym))) `(,ns (lambda (,v) (,v ',(car p))))) p)))
-                                          (push p parm))))))
-                      (map (bind dostuff #f) slots)
-                      (map (bind dostuff #t) (remove-duplicates-from-end (filter (compose not (rbind member slots (compose eq? car))) auxiliary-slots) (compose eq? car)))
-                      (cons (reverse parm) (reverse bindings))))
          (all-slots (remove-duplicates-from-end `(,@auxiliary-slots ,@slots) (compose eq? car)))
          (all-methods (remove-duplicates-from-end `(,@auxiliary-methods ,@accessor-methods ,@methods) (compose eq? car)))
          (classes (cons name (remove-duplicates (apply append (map (lambda (x) (x 'classes)) super)) eq?))))
@@ -214,9 +200,8 @@
                   'all-methods ',all-methods
                   'class-name ',name
                   'classes ',classes
-                  'make (lambda* ,(car parm.bind)
+                  'make (lambda* ,all-slots
                           (let ((class-name ',name)
-                                ,@(cdr parm.bind)
                                 ,@all-methods)
                             (curlet)))))))
 
@@ -1829,7 +1814,7 @@
 (defclass sum-form-clause (sum-clause form-mixin) ()
   (body-form (clause end-tag)
       `(set! ,*accumulation-variable*
-         (,sum ,*accumulation-variable* ,(clause 'form)))))
+         (apply ,sum ,*accumulation-variable* (list-values ,(clause 'form))))))
 
 (defclass sum-it-into-clause (into-mixin sum-clause it-mixin) ()
   (body-form (clause end-tag)
@@ -1839,7 +1824,7 @@
 (defclass sum-form-into-clause (into-mixin sum-clause form-mixin) ()
   (body-form (clause end-tag)
     `(set! ,(clause 'into-var)
-           (,sum ,(clause 'into-var) ,(clause 'form)))))
+           (apply ,sum ,(clause 'into-var) (list-values ,(clause 'form))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -1910,9 +1895,9 @@
 (defclass maximize-form-clause (maximize-clause form-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,*accumulation-variable*)
-         (set! ,*accumulation-variable* (,ensure-real ,(clause 'form) 'max-argument-must-be-real))
+         (set! ,*accumulation-variable* (apply ,maximize -inf.0 (list-values ,(clause 'form))))
          (set! ,*accumulation-variable*
-               (,maximize ,*accumulation-variable* ,(clause 'form))))))
+               (apply ,maximize ,*accumulation-variable* (list-values ,(clause 'form)))))))
 
 (defclass maximize-it-into-clause (into-mixin maximize-clause it-mixin) ()
   (body-form (clause end-tag)
@@ -1924,9 +1909,9 @@
 (defclass maximize-form-into-clause (into-mixin maximize-clause form-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,(clause 'into-var))
-         (set! ,(clause 'into-var) (,ensure-real ,(clause 'form) 'max-argument-must-be-real))
+         (set! ,(clause 'into-var) (apply ,maximize -inf.0 (list-values ,(clause 'form))))
          (set! ,(clause 'into-var)
-               (,maximize ,(clause 'into-var) ,(clause 'form))))))
+               (apply ,maximize ,(clause 'into-var) (list-values ,(clause 'form)))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1989,30 +1974,30 @@
 (defclass minimize-it-clause (minimize-clause it-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,*accumulation-variable*)
-         (set! ,*accumulation-variable* (ensure-real ,*it-var* 'min-argument-must-be-real))
+         (set! ,*accumulation-variable* (,ensure-real ,*it-var* 'min-argument-must-be-real))
          (set! ,*accumulation-variable*
                (,minimize ,*accumulation-variable* ,*it-var*)))))
 
 (defclass minimize-form-clause (minimize-clause form-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,*accumulation-variable*)
-         (set! ,*accumulation-variable* (ensure-real ,(clause 'form) 'min-argument-must-be-real))
+         (set! ,*accumulation-variable* (apply ,minimize +inf.0 (list-values ,(clause 'form))))
          (set! ,*accumulation-variable*
-               (,minimize ,*accumulation-variable* ,(clause 'form))))))
+               (apply ,minimize ,*accumulation-variable* (list-values ,(clause 'form)))))))
 
 (defclass minimize-it-into-clause (into-mixin minimize-clause it-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,(clause 'into-var))
-         (set! ,(clause 'into-var) (ensure-real ,*it-var* 'min-argument-must-be-real))
+         (set! ,(clause 'into-var) (,ensure-real ,*it-var* 'min-argument-must-be-real))
          (set! ,(clause 'into-var)
                (,minimize ,(clause 'into-var) ,*it-var*)))))
 
 (defclass minimize-form-into-clause (into-mixin minimize-clause form-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,(clause 'into-var))
-         (set! ,(clause 'into-var) (ensure-real ,(clause 'form) 'min-argument-must-be-real))
+         (set! ,(clause 'into-var) (apply ,minimize +inf.0 (list-values ,(clause 'form))))
          (set! ,(clause 'into-var)
-               (,minimize ,(clause 'into-var) ,(clause 'form))))))
+               (apply ,minimize ,(clause 'into-var) (list-values ,(clause 'form)))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3750,12 +3735,15 @@
   (check-no-variable-overlap clauses))
 ;;; This function is called in a SUM clause in order to sum the
 ;;; accumulated value with the new one.
-(define (sum x y)
-  (unless (number? y)
-    (error 'sum-argument-must-be-number
-           :datum y
-           :expected-type 'number))
-  (+ x y))
+(define (sum x . y)
+  (for-each (lambda (y)
+              (unless (number? y)
+                (error 'sum-argument-must-be-number
+                       :datum y
+                       :expected-type 'number))
+              (set! x (+ x y)) y)
+            y)
+  x)
 
 ;;; This function is called in MAX and MIN clauses to ensure that new values
 ;;; are real.
@@ -3769,15 +3757,19 @@
 
 ;;; This function is called in a MAX clause in order to compute the
 ;;; max of the accumulated value and the new one.
-(define (maximize x y)
-  (ensure-real y 'max-argument-must-be-real)
-  (max x y))
+(define (maximize x . y)
+  (for-each (lambda (y)
+              (set! x (max x (ensure-real y 'max-argument-must-be-real))))
+            y)
+  x)
 
 ;;; This function is called in a MIN clause in order to compute the
 ;;; min of the accumulated value and the new one.
-(define (minimize x y)
-  (ensure-real y 'min-argument-must-be-real)
-  (min x y))
+(define (minimize x . y)
+  (for-each (lambda (y)
+              (set! x (min x (ensure-real y 'min-argument-must-be-real))))
+            y)
+  x)
 
 ;;; This function is called during restructuring to compute the CAR of
 ;;; some value.  If that value turns out not to be a LIST, then an
