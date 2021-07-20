@@ -34,3 +34,4 @@ Todo:
 
 - Collect a vector/string instead of a list
 - Collect into a lazy iterator?
+- Max/min that never executes should return -inf/inf
