@@ -123,20 +123,6 @@
          (methods (map (lambda (m) `(,(car m) (lambda* ,(cadr m) ,@(cddr m)))) methods))
          (slots (map (lambda (s) (if (pair? s) s `(,s (error ,(format #f "No initializer supplied for slot ~a" s))))) slots))
          (accessor-methods '())
-         (parm.bind (let* ((parm '())
-                           (bindings '())
-                           (dostuff (lambda (inherited p)
-                                      (let ((s (symbol->string (car p))))
-                                        (if (char=? (s 0) #\%)
-                                          (let ((ns (string->symbol (substring s 1))))
-                                            (push (list ns (cadr p)) parm)
-                                            (push (list (car p) ns) bindings)
-                                            (unless inherited
-                                              (push (let ((v (gensym))) `(,ns (lambda (,v) (,v ',(car p))))) p)))
-                                          (push p parm))))))
-                      (map (bind dostuff #f) slots)
-                      (map (bind dostuff #t) (remove-duplicates-from-end (filter (compose not (rbind member slots (compose eq? car))) auxiliary-slots) (compose eq? car)))
-                      (cons (reverse parm) (reverse bindings))))
          (all-slots (remove-duplicates-from-end `(,@auxiliary-slots ,@slots) (compose eq? car)))
          (all-methods (remove-duplicates-from-end `(,@auxiliary-methods ,@accessor-methods ,@methods) (compose eq? car)))
          (classes (cons name (remove-duplicates (apply append (map (lambda (x) (x 'classes)) super)) eq?))))
@@ -149,9 +135,8 @@
                   'all-methods ',all-methods
                   'class-name ',name
                   'classes ',classes
-                  'make (lambda* ,(car parm.bind)
+                  'make (lambda* ,all-slots
                           (let ((class-name ',name)
-                                ,@(cdr parm.bind)
                                 ,@all-methods)
                             (curlet)))))))
 
