@@ -2,7 +2,7 @@
 
 (call-with-output-file "../loop.scm"
   (lambda (op)
-    (write-string "(define loop (let ()" op)
+    (write-string "; automatically generated; do not edit\n\n(define loop (let ()\n" op)
     (loop for f in files
           do (call-with-input-file f
                (lambda (ip)

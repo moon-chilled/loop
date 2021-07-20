@@ -1,4 +1,7 @@
-(define loop (let ()(define transform-tagbody
+; automatically generated; do not edit
+
+(define loop (let ()
+(define transform-tagbody
   (let ()
     ;; from guile-user I think
     ;; (block LABEL FORMS...)
@@ -1210,19 +1213,7 @@
   (declarations (clause)
     (apply append (map declarations (clause 'subclauses)))))
 
-
-;(defmethod initialize-instance :after
-;    ((clause with-subclause) &key &allow-other-keys)
-;  (multiple-value-bind (temp-vars dictionary)
-;      (fresh-variables (var-spec clause))
-;    (reinitialize-instance clause
-;                           :temp-vars temp-vars
-;                           :dictionary dictionary)))
-
 (defclass with-subclause-no-form (with-subclause) ()
-  (initial-bindings (clause)
-    `((,(clause 'form-var) ,(clause 'form))))
-
   (wrap-subclause (subclause inner-form)
     (let* ((vars-and-types
              (extract-variables (subclause 'var-spec) (subclause 'type-spec)))
@@ -1231,7 +1222,8 @@
                     (list (car vt) (case (cadr vt)
                                      ((fixnum) 0)
                                      ((float) 0.0)
-                                     (else #<unspecified>))))))) ;unspecified was nil in cl
+                                     (else #<undefined>))))
+                  vars-and-types))) ;undefined was nil in cl
       `(let ,vars-and-values
          ,inner-form))))
 
@@ -1239,10 +1231,13 @@
   (form
    (form-var (gensym)))
 
+  (initial-bindings (clause)
+    `((,(clause 'form-var) ,(clause 'form))))
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute the subclause wrapper.
-  
+
   (wrap-subclause (subclause inner-form)
     `(let* ,(destructure-variables (subclause 'var-spec) (subclause 'form-var))
        ,inner-form)))
@@ -1255,10 +1250,14 @@
 ;;; We try this parser first.
 (define-parser with-subclause-type-1-parser
   (consecutive (lambda (var-spec type-spec = form)
-                 (make-instance 'with-subclause-with-form
-                   :var-spec var-spec
-                   :type-spec type-spec
-                   :form form))
+                 (pidgin-destructuring-bind (temp-vars dictionary)
+                      (fresh-variables var-spec)
+                    (make-instance 'with-subclause-with-form
+                      :var-spec var-spec
+                      :type-spec type-spec
+                      :temp-vars temp-vars
+                      :dictionary dictionary
+                      :form form)))
                ;; Accept anything for now.  Analyze later.
                anything-parser
                optional-type-spec-parser
@@ -1268,9 +1267,13 @@
 ;;; Parser for var [type-spec]
 (define-parser with-subclause-type-2-parser
   (consecutive (lambda (var-spec type-spec)
-                 (make-instance 'with-subclause-no-form
-                   :var-spec var-spec
-                   :type-spec type-spec))
+                 (pidgin-destructuring-bind (temp-vars dictionary)
+                      (fresh-variables var-spec)
+                   (make-instance 'with-subclause-no-form
+                     :var-spec var-spec
+                     :type-spec type-spec
+                     :temp-vars temp-vars
+                     :dictionary dictionary)))
                ;; Accept anything for now.  Analyze later.
                anything-parser
                optional-type-spec-parser))
