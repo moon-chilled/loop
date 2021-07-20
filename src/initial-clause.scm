@@ -32,6 +32,6 @@
                  (make-instance 'initial-clause
                    :form compound+))
                (keyword-parser 'initially)
-               'compound+))
+               compound+))
 
 (add-clause-parser initial-clause-parser)

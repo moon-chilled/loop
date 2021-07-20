@@ -3,22 +3,22 @@
 (defclass sum-it-clause (sum-clause it-mixin) ()
   (body-form (clause end-tag)
     `(set! ,*accumulation-variable*
-           (sum ,*accumulation-variable* ,*it-var*))))
+           (,sum ,*accumulation-variable* ,*it-var*))))
 
 (defclass sum-form-clause (sum-clause form-mixin) ()
   (body-form (clause end-tag)
       `(set! ,*accumulation-variable*
-         (sum ,*accumulation-variable* ,(clause 'form)))))
+         (,sum ,*accumulation-variable* ,(clause 'form)))))
 
 (defclass sum-it-into-clause (into-mixin sum-clause it-mixin) ()
   (body-form (clause end-tag)
     `(set! ,(clause 'into-var)
-           (sum ,(clause 'into-var) ,*it-var*))))
+           (,sum ,(clause 'into-var) ,*it-var*))))
 
 (defclass sum-form-into-clause (into-mixin sum-clause form-mixin) ()
   (body-form (clause end-tag)
     `(set! ,(clause 'into-var)
-           (sum ,(clause 'into-var) ,(clause 'form)))))
+           (,sum ,(clause 'into-var) ,(clause 'form)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
