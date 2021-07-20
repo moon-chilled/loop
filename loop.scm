@@ -191,10 +191,6 @@
          (all-slots (remove-duplicates-from-end `(,@auxiliary-slots ,@slots) (compose eq? car)))
          (all-methods (remove-duplicates-from-end `(,@auxiliary-methods ,@accessor-methods ,@methods) (compose eq? car)))
          (classes (cons name (remove-duplicates (apply append (map (lambda (x) (x 'classes)) super)) eq?))))
-    ; turns ((a b) (x y)) into ('a b 'x y)
-    (define (flatten-bindlist x)
-      (apply append (map (lambda (x) (cons `',(car x) (cdr x))) x)))
-    ; for some reason returning multiple values here doesn't work?
     `(set! (*classes* ',name)
            (inlet 'all-slots ',all-slots
                   'all-methods ',all-methods
@@ -1532,11 +1528,11 @@
   (body-form (clause end-tag)
     `(if (null? ,*list-tail-accumulation-variable*)
          (begin (set! ,*accumulation-variable*
-                      (,copy-list ,(form clause)))
+                      (,copy-list ,(clause 'form)))
                 (set! ,*list-tail-accumulation-variable*
                       (,last ,*accumulation-variable*)))
          (begin (set-cdr! ,*list-tail-accumulation-variable*
-                        (,copy-list ,(form clause)))
+                        (,copy-list ,(clause 'form)))
                 (set! ,*list-tail-accumulation-variable*
                       (,last ,*list-tail-accumulation-variable*))))))
 
@@ -1556,11 +1552,11 @@
   (body-form (clause end-tag)
     `(if (null? ,(tail-variable (clause 'into-var)))
          (begin (set! ,(clause 'into-var)
-                      (,copy-list ,(form clause)))
+                      (,copy-list ,(clause 'form)))
                 (set! ,(tail-variable (clause 'into-var))
                       (,last ,(clause 'into-var))))
          (begin (set-cdr! ,(tail-variable (clause 'into-var))
-                        (,copy-list ,(form clause)))
+                        (,copy-list ,(clause 'form)))
                 (set! ,(tail-variable (clause 'into-var))
                       (,last ,(tail-variable (clause 'into-var))))))))
 
@@ -1637,37 +1633,37 @@
   (body-form (clause end-tag)
     `(if (null? ,*list-tail-accumulation-variable*)
          (begin (set! ,*accumulation-variable*
-                      ,(form clause))
+                      ,(clause 'form))
                 (set! ,*list-tail-accumulation-variable*
                       (,last ,*accumulation-variable*)))
          (begin (set-cdr! ,*list-tail-accumulation-variable*
-                        ,(form clause))
+                        ,(clause 'form))
                 (set! ,*list-tail-accumulation-variable*
                       (,last ,*list-tail-accumulation-variable*))))))
 
 (defclass nconc-it-into-clause (into-mixin nconc-clause it-mixin) ()
   (body-form (clause end-tag)
-    `(if (null? ,(tail-variable (into-var clause)))
-         (begin (set! ,(into-var clause)
+    `(if (null? ,(tail-variable (clause 'into-var)))
+         (begin (set! ,(clause 'into-var)
                       ,*it-var*)
-                (set! ,(tail-variable (into-var clause))
-                      (,last ,(into-var clause))))
-         (begin (set-cdr! ,(tail-variable (into-var clause))
+                (set! ,(tail-variable (clause 'into-var))
+                      (,last ,(clause 'into-var))))
+         (begin (set-cdr! ,(tail-variable (clause 'into-var))
                         ,*it-var*)
-                (set! ,(tail-variable (into-var clause))
-                      (,last ,(tail-variable (into-var clause))))))))
+                (set! ,(tail-variable (clause 'into-var))
+                      (,last ,(tail-variable (clause 'into-var))))))))
 
 (defclass nconc-form-into-clause (into-mixin nconc-clause form-mixin) ()
   (body-form (clause end-tag)
-    `(if (null? ,(tail-variable (into-var clause)))
-         (begin (set! ,(into-var clause)
-                      ,(form clause))
-                (set! ,(tail-variable (into-var clause))
-                      (,last ,(into-var clause))))
-         (begin (set-cdr! ,(tail-variable (into-var clause))
-                        ,(form clause))
-                (set! ,(tail-variable (into-var clause))
-                      (,last ,(tail-variable (into-var clause))))))))
+    `(if (null? ,(tail-variable (clause 'into-var)))
+         (begin (set! ,(clause 'into-var)
+                      ,(clause 'form))
+                (set! ,(tail-variable (clause 'into-var))
+                      (,last ,(clause 'into-var))))
+         (begin (set-cdr! ,(tail-variable (clause 'into-var))
+                        ,(clause 'form))
+                (set! ,(tail-variable (clause 'into-var))
+                      (,last ,(tail-variable (clause 'into-var))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -2113,7 +2109,7 @@
                  (make-instance 'conditional-clause
                    :condition form
                    :then-clauses then-clauses
-                   :else-clauses nil))
+                   :else-clauses '()))
                (alternative (keyword-parser 'if)
                             (keyword-parser 'when))
                anything-parser
@@ -2138,7 +2134,7 @@
                  (make-instance 'conditional-clause
                    :condition form
                    :then-clauses then-clauses
-                   :else-clauses nil))
+                   :else-clauses '()))
                (alternative (keyword-parser 'if)
                             (keyword-parser 'when))
                anything-parser
@@ -2167,7 +2163,7 @@
   (consecutive (lambda (unless form else-clauses end)
                  (make-instance 'conditional-clause
                    :condition form
-                   :then-clauses nil
+                   :then-clauses '()
                    :else-clauses else-clauses))
                (keyword-parser 'unless)
                anything-parser
@@ -2190,7 +2186,7 @@
   (consecutive (lambda (unless form else-clauses)
                  (make-instance 'conditional-clause
                    :condition form
-                   :then-clauses nil
+                   :then-clauses '()
                    :else-clauses else-clauses))
                (alternative (keyword-parser 'unless)
                             (keyword-parser 'when))
@@ -3792,10 +3788,10 @@
              :expected-type 'list)))
 
 (define (last x)
-  (if (null? (cdr x))
+  (if (not (pair? (cdr x)))
     x
     (last (cdr x))))
 
 (define (copy-list x)
-  (if (null? x) '() (cons (car x) (copy-list (cdr x)))))
+  (if (not (pair? x)) x (cons (car x) (copy-list (cdr x)))))
 (macro forms (expand-body forms))))

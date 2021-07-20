@@ -56,7 +56,7 @@
                  (make-instance 'conditional-clause
                    :condition form
                    :then-clauses then-clauses
-                   :else-clauses nil))
+                   :else-clauses '()))
                (alternative (keyword-parser 'if)
                             (keyword-parser 'when))
                anything-parser
@@ -81,7 +81,7 @@
                  (make-instance 'conditional-clause
                    :condition form
                    :then-clauses then-clauses
-                   :else-clauses nil))
+                   :else-clauses '()))
                (alternative (keyword-parser 'if)
                             (keyword-parser 'when))
                anything-parser
@@ -110,7 +110,7 @@
   (consecutive (lambda (unless form else-clauses end)
                  (make-instance 'conditional-clause
                    :condition form
-                   :then-clauses nil
+                   :then-clauses '()
                    :else-clauses else-clauses))
                (keyword-parser 'unless)
                anything-parser
@@ -133,7 +133,7 @@
   (consecutive (lambda (unless form else-clauses)
                  (make-instance 'conditional-clause
                    :condition form
-                   :then-clauses nil
+                   :then-clauses '()
                    :else-clauses else-clauses))
                (alternative (keyword-parser 'unless)
                             (keyword-parser 'when))

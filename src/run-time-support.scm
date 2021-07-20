@@ -57,9 +57,9 @@
              :expected-type 'list)))
 
 (define (last x)
-  (if (null? (cdr x))
+  (if (not (pair? (cdr x)))
     x
     (last (cdr x))))
 
 (define (copy-list x)
-  (if (null? x) '() (cons (car x) (copy-list (cdr x)))))
+  (if (not (pair? x)) x (cons (car x) (copy-list (cdr x)))))

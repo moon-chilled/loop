@@ -99,6 +99,7 @@
 (load "loop5.scm")
 (load "loop6.scm")
 (load "loop8.scm")
+(load "loop9.scm")
 
 ; commented in sicl:
 ;; (defun loop-with-repeat-do-collect-finally ()

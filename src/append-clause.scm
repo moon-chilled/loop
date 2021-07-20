@@ -16,11 +16,11 @@
   (body-form (clause end-tag)
     `(if (null? ,*list-tail-accumulation-variable*)
          (begin (set! ,*accumulation-variable*
-                      (,copy-list ,(form clause)))
+                      (,copy-list ,(clause 'form)))
                 (set! ,*list-tail-accumulation-variable*
                       (,last ,*accumulation-variable*)))
          (begin (set-cdr! ,*list-tail-accumulation-variable*
-                        (,copy-list ,(form clause)))
+                        (,copy-list ,(clause 'form)))
                 (set! ,*list-tail-accumulation-variable*
                       (,last ,*list-tail-accumulation-variable*))))))
 
@@ -40,11 +40,11 @@
   (body-form (clause end-tag)
     `(if (null? ,(tail-variable (clause 'into-var)))
          (begin (set! ,(clause 'into-var)
-                      (,copy-list ,(form clause)))
+                      (,copy-list ,(clause 'form)))
                 (set! ,(tail-variable (clause 'into-var))
                       (,last ,(clause 'into-var))))
          (begin (set-cdr! ,(tail-variable (clause 'into-var))
-                        (,copy-list ,(form clause)))
+                        (,copy-list ,(clause 'form)))
                 (set! ,(tail-variable (clause 'into-var))
                       (,last ,(tail-variable (clause 'into-var))))))))
 
