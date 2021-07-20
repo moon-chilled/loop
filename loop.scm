@@ -281,9 +281,9 @@
 ;;; If a clause can have subclauses, then each subclause may need to
 ;;; be wrapped separately.  The generic function WRAP-SUBCLAUSE
 ;;; determines how this is done.
-;;; By default, the wrapper for
-;;; each subclause contains only the final bindings, leaving the
-;;; initial bindings to a single binding form of the entire clause.
+;;; By default, the wrapper for each subclause contains only the final
+;;; bindings, leaving the initial bindings to a single binding form of
+;;; the entire clause.
 (defgeneric wrap-subclause (subclause inner-form)
   `(let ,(final-bindings subclause)
      ,inner-form))
@@ -365,8 +365,10 @@
 (define (generate-assignments d-var-spec form)
   (pidgin-destructuring-bind (temp-d-var-spec dictionary)
                              (fresh-variables d-var-spec)
-    `(let* ,(destructure-variables temp-d-var-spec form)
-       ,@(map (lambda (t) `(set! ,(car t) ,(cdr t))) dictionary))))
+    (if (null? dictionary)
+      ()
+      `(let* ,(destructure-variables temp-d-var-spec form)
+         ,@(map (lambda (t) `(set! ,(car t) ,(cdr t))) dictionary)))))
 
 ;;; Extract variables
 (define (extract-variables d-var-spec d-type-spec)
@@ -787,7 +789,7 @@
         `(call-with-exit
            (letrec ((,tag (lambda (return)
                             ,@loop-body
-                            (,tag))))
+                            (,tag return))))
              ,tag)))
       (let ((clauses (parse-loop-body loop-body))
             (end-tag (gensym)))
@@ -1103,7 +1105,7 @@
                  (make-instance 'initial-clause
                    :form compound+))
                (keyword-parser 'initially)
-               'compound+))
+               compound+))
 
 (add-clause-parser initial-clause-parser)
 ;;;; Clause FINAL-CLAUSE.
@@ -1400,7 +1402,7 @@
          (begin (set-cdr! ,*list-tail-accumulation-variable*
                           (list ,*it-var*))
                 (set! ,*list-tail-accumulation-variable*
-                      (cdr ,*list-tail-accumulation-variable*)))))) ;should this be last-pair?
+                      (cdr ,*list-tail-accumulation-variable*)))))) ;should this be last?
 
 (defclass collect-form-clause (collect-clause form-mixin)
   ()
@@ -1412,7 +1414,7 @@
               (set! ,*accumulation-variable*
                     ,*list-tail-accumulation-variable*))
        (begin (set! ,*list-tail-accumulation-variable*
-                    (,last-pair ,*list-tail-accumulation-variable*))
+                    (,last ,*list-tail-accumulation-variable*))
               (set-cdr! ,*list-tail-accumulation-variable*
                         (list-values ,(clause 'form)))))))
 
@@ -1440,7 +1442,7 @@
               (set! ,(clause 'into-var)
                     ,(tail-variable (clause 'into-var))))
        (begin (set! ,(tail-variable (clause 'into-var))
-                    (,last-pair ,(tail-variable (clause 'into-var))))
+                    (,last ,(tail-variable (clause 'into-var))))
               (set-cdr! ,(tail-variable (clause 'into-var))
                         (list-values ,(clause 'form)))))))
 
@@ -1493,6 +1495,701 @@
                collect-form-clause-parser))
 
 (add-clause-parser collect-clause-parser)
+(defclass append-clause (list-accumulation-clause) ())
+
+(defclass append-it-clause (append-clause it-mixin) ()
+  (body-form (clause end-tag)
+    `(if (null? ,*list-tail-accumulation-variable*)
+         (begin (set! ,*accumulation-variable*
+                      (,copy-list ,*it-var*))
+                (set! ,*list-tail-accumulation-variable*
+                      (,last ,*accumulation-variable*)))
+         (begin (set-cdr! ,*list-tail-accumulation-variable*
+                        (,copy-list ,*it-var*))
+                (set! ,*list-tail-accumulation-variable*
+                      (,last ,*list-tail-accumulation-variable*))))))
+
+(defclass append-form-clause (append-clause form-mixin) ()
+  (body-form (clause end-tag)
+    `(if (null? ,*list-tail-accumulation-variable*)
+         (begin (set! ,*accumulation-variable*
+                      (,copy-list ,(form clause)))
+                (set! ,*list-tail-accumulation-variable*
+                      (,last ,*accumulation-variable*)))
+         (begin (set-cdr! ,*list-tail-accumulation-variable*
+                        (,copy-list ,(form clause)))
+                (set! ,*list-tail-accumulation-variable*
+                      (,last ,*list-tail-accumulation-variable*))))))
+
+(defclass append-it-into-clause (into-mixin append-clause it-mixin) ()
+  (body-form (clause end-tag)
+    `(if (null? ,(tail-variable (clause 'into-var)))
+         (begin (set! ,(clause 'into-var)
+                      (,copy-list ,*it-var*))
+                (set! ,(tail-variable (clause 'into-var))
+                      (,last ,(clause 'into-var))))
+         (begin (set-cdr! ,(tail-variable (clause 'into-var))
+                        (,copy-list ,*it-var*))
+                (set! ,(tail-variable (clause 'into-var))
+                      (,last ,(tail-variable (clause 'into-var))))))))
+
+(defclass append-form-into-clause (into-mixin append-clause form-mixin) ()
+  (body-form (clause end-tag)
+    `(if (null? ,(tail-variable (clause 'into-var)))
+         (begin (set! ,(clause 'into-var)
+                      (,copy-list ,(form clause)))
+                (set! ,(tail-variable (clause 'into-var))
+                      (,last ,(clause 'into-var))))
+         (begin (set-cdr! ,(tail-variable (clause 'into-var))
+                        (,copy-list ,(form clause)))
+                (set! ,(tail-variable (clause 'into-var))
+                      (,last ,(tail-variable (clause 'into-var))))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Parsers.
+
+(define-parser append-it-into-clause-parser
+  (consecutive (lambda (append it into var)
+                 (make-instance 'append-it-into-clause
+                   :into-var var))
+               (alternative (keyword-parser 'append)
+                            (keyword-parser 'appending))
+               (keyword-parser 'it)
+               (keyword-parser 'into)
+               (singleton identity symbol?)))
+
+(define-parser append-it-clause-parser
+  (consecutive (lambda (append it)
+                 (make-instance 'append-it-clause))
+               (alternative (keyword-parser 'append)
+                            (keyword-parser 'appending))
+               (keyword-parser 'it)))
+
+(define-parser append-form-into-clause-parser
+  (consecutive (lambda (append form into var)
+                 (make-instance 'append-form-into-clause
+                   :form form
+                   :into-var var))
+               (alternative (keyword-parser 'append)
+                            (keyword-parser 'appending))
+               anything-parser
+               (keyword-parser 'into)
+               (singleton identity symbol?)))
+
+(define-parser append-form-clause-parser
+  (consecutive (lambda (append form)
+                 (make-instance 'append-form-clause
+                   :form form))
+               (alternative (keyword-parser 'append)
+                            (keyword-parser 'appending))
+               anything-parser))
+
+(define-parser append-clause-parser
+  (alternative append-it-into-clause-parser
+               append-it-clause-parser
+               append-form-into-clause-parser
+               append-form-clause-parser))
+
+(add-clause-parser append-clause-parser)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Compute body-form.
+
+
+
+
+(defclass nconc-clause (list-accumulation-clause) ())
+
+(defclass nconc-it-clause (nconc-clause it-mixin) ()
+  (body-form (clause end-tag)
+    `(if (null? ,*list-tail-accumulation-variable*)
+         (begin (set! ,*accumulation-variable*
+                      ,*it-var*)
+                (set! ,*list-tail-accumulation-variable*
+                      (,last ,*accumulation-variable*)))
+         (begin (set-cdr! ,*list-tail-accumulation-variable*
+                        ,*it-var*)
+                (set! ,*list-tail-accumulation-variable*
+                      (,last ,*list-tail-accumulation-variable*))))))
+
+(defclass nconc-form-clause (nconc-clause form-mixin) ()
+  (body-form (clause end-tag)
+    `(if (null? ,*list-tail-accumulation-variable*)
+         (begin (set! ,*accumulation-variable*
+                      ,(form clause))
+                (set! ,*list-tail-accumulation-variable*
+                      (,last ,*accumulation-variable*)))
+         (begin (set-cdr! ,*list-tail-accumulation-variable*
+                        ,(form clause))
+                (set! ,*list-tail-accumulation-variable*
+                      (,last ,*list-tail-accumulation-variable*))))))
+
+(defclass nconc-it-into-clause (into-mixin nconc-clause it-mixin) ()
+  (body-form (clause end-tag)
+    `(if (null? ,(tail-variable (into-var clause)))
+         (begin (set! ,(into-var clause)
+                      ,*it-var*)
+                (set! ,(tail-variable (into-var clause))
+                      (,last ,(into-var clause))))
+         (begin (set-cdr! ,(tail-variable (into-var clause))
+                        ,*it-var*)
+                (set! ,(tail-variable (into-var clause))
+                      (,last ,(tail-variable (into-var clause))))))))
+
+(defclass nconc-form-into-clause (into-mixin nconc-clause form-mixin) ()
+  (body-form (clause end-tag)
+    `(if (null? ,(tail-variable (into-var clause)))
+         (begin (set! ,(into-var clause)
+                      ,(form clause))
+                (set! ,(tail-variable (into-var clause))
+                      (,last ,(into-var clause))))
+         (begin (set-cdr! ,(tail-variable (into-var clause))
+                        ,(form clause))
+                (set! ,(tail-variable (into-var clause))
+                      (,last ,(tail-variable (into-var clause))))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Parsers.
+
+(define-parser nconc-it-into-clause-parser
+  (consecutive (lambda (nconc it into var)
+                 (make-instance 'nconc-it-into-clause
+                   :into-var var))
+               (alternative (keyword-parser 'nconc)
+                            (keyword-parser 'nconcing))
+               (keyword-parser 'it)
+               (keyword-parser 'into)
+               (singleton identity symbol?)))
+
+(define-parser nconc-it-clause-parser
+  (consecutive (lambda (nconc it)
+                 (make-instance 'nconc-it-clause))
+               (alternative (keyword-parser 'nconc)
+                            (keyword-parser 'nconcing))
+               (keyword-parser 'it)))
+
+(define-parser nconc-form-into-clause-parser
+  (consecutive (lambda (nconc form into var)
+                 (make-instance 'nconc-form-into-clause
+                   :form form
+                   :into-var var))
+               (alternative (keyword-parser 'nconc)
+                            (keyword-parser 'nconcing))
+               anything-parser
+               (keyword-parser 'into)
+               (singleton identity symbol?)))
+
+(define-parser nconc-form-clause-parser
+  (consecutive (lambda (nconc form)
+                 (make-instance 'nconc-form-clause
+                   :form form))
+               (alternative (keyword-parser 'nconc)
+                            (keyword-parser 'nconcing))
+               anything-parser))
+
+(define-parser nconc-clause-parser
+  (alternative nconc-it-into-clause-parser
+               nconc-it-clause-parser
+               nconc-form-into-clause-parser
+               nconc-form-clause-parser))
+
+(add-clause-parser nconc-clause-parser)
+(defclass count-clause (count/sum-accumulation-clause) ())
+
+(defclass count-it-clause (count-clause it-mixin) ()
+  (body-form (clause end-tag)
+    `(when ,*it-var*
+       (set! ,*accumulation-variable*
+             (+ 1 ,*accumulation-variable*)))))
+
+(defclass count-form-clause (count-clause form-mixin) ()
+  (body-form (clause end-tag)
+    `(when ,(clause 'form)
+       (set! ,*accumulation-variable*
+             (+ 1 ,*accumulation-variable*)))))
+
+(defclass count-it-into-clause (into-mixin count-clause it-mixin) ()
+  (body-form (clause end-tag)
+    `(when ,*it-var*
+       (set! ,(clause 'into-var)
+             (+ 1 ,(clause 'into-var))))))
+
+(defclass count-form-into-clause (into-mixin count-clause form-mixin) ()
+  (body-form (clause end-tag)
+    `(when ,(clause 'form)
+       (set! ,(clause 'into-var)
+             (+ 1 ,(clause 'into-var))))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Parsers.
+
+(define-parser count-it-into-clause-parser
+  (consecutive (lambda (count it into var type-spec)
+                 (make-instance 'count-it-into-clause
+                   :into-var var
+                   :type-spec type-spec))
+               (alternative (keyword-parser 'count)
+                            (keyword-parser 'counting))
+               (keyword-parser 'it)
+               (keyword-parser 'into)
+               (singleton identity
+                          symbol?)
+               optional-type-spec-parser))
+
+(define-parser count-it-clause-parser
+  (consecutive (lambda (count it type-spec)
+                 (make-instance 'count-it-clause
+                   :type-spec type-spec))
+               (alternative (keyword-parser 'count)
+                            (keyword-parser 'counting))
+               (keyword-parser 'it)
+               optional-type-spec-parser))
+
+(define-parser count-form-into-clause-parser
+  (consecutive (lambda (count form into var type-spec)
+                 (make-instance 'count-form-into-clause
+                   :form form
+                   :into-var var
+                   :type-spec type-spec))
+               (alternative (keyword-parser 'count)
+                            (keyword-parser 'counting))
+               anything-parser
+               (keyword-parser 'into)
+               (singleton identity
+                          symbol?)
+               optional-type-spec-parser))
+
+(define-parser count-form-clause-parser
+  (consecutive (lambda (count form type-spec)
+                 (make-instance 'count-form-clause
+                   :form form
+                   :type-spec type-spec))
+               (alternative (keyword-parser 'count)
+                            (keyword-parser 'counting))
+               anything-parser
+               optional-type-spec-parser))
+
+(define-parser count-clause-parser
+  (alternative count-it-into-clause-parser
+               count-it-clause-parser
+               count-form-into-clause-parser
+               count-form-clause-parser))
+
+(add-clause-parser count-clause-parser)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Compute the BODY-FORM.
+(defclass sum-clause (count/sum-accumulation-clause) ())
+
+(defclass sum-it-clause (sum-clause it-mixin) ()
+  (body-form (clause end-tag)
+    `(set! ,*accumulation-variable*
+           (,sum ,*accumulation-variable* ,*it-var*))))
+
+(defclass sum-form-clause (sum-clause form-mixin) ()
+  (body-form (clause end-tag)
+      `(set! ,*accumulation-variable*
+         (,sum ,*accumulation-variable* ,(clause 'form)))))
+
+(defclass sum-it-into-clause (into-mixin sum-clause it-mixin) ()
+  (body-form (clause end-tag)
+    `(set! ,(clause 'into-var)
+           (,sum ,(clause 'into-var) ,*it-var*))))
+
+(defclass sum-form-into-clause (into-mixin sum-clause form-mixin) ()
+  (body-form (clause end-tag)
+    `(set! ,(clause 'into-var)
+           (,sum ,(clause 'into-var) ,(clause 'form)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Parsers.
+
+(define-parser sum-it-into-clause-parser
+  (consecutive (lambda (sum it into var type-spec)
+                 (make-instance 'sum-it-into-clause
+                   :into-var var
+                   :type-spec type-spec))
+               (alternative (keyword-parser 'sum)
+                            (keyword-parser 'summing))
+               (keyword-parser 'it)
+               (keyword-parser 'into)
+               (singleton identity
+                          symbol?)
+               optional-type-spec-parser))
+
+(define-parser sum-it-clause-parser
+  (consecutive (lambda (sum it type-spec)
+                 (make-instance 'sum-it-clause
+                   :type-spec type-spec))
+               (alternative (keyword-parser 'sum)
+                            (keyword-parser 'summing))
+               (keyword-parser 'it)
+               optional-type-spec-parser))
+
+(define-parser sum-form-into-clause-parser
+  (consecutive (lambda (sum form into var type-spec)
+                 (make-instance 'sum-form-into-clause
+                   :form form
+                   :into-var var
+                   :type-spec type-spec))
+               (alternative (keyword-parser 'sum)
+                            (keyword-parser 'summing))
+               anything-parser
+               (keyword-parser 'into)
+               (singleton identity
+                          symbol?)
+               optional-type-spec-parser))
+
+(define-parser sum-form-clause-parser
+  (consecutive (lambda (sum form type-spec)
+                 (make-instance 'sum-form-clause
+                   :form form
+                   :type-spec type-spec))
+               (alternative (keyword-parser 'sum)
+                            (keyword-parser 'summing))
+               anything-parser
+               optional-type-spec-parser))
+
+(define-parser sum-clause-parser
+  (alternative sum-it-into-clause-parser
+               sum-it-clause-parser
+               sum-form-into-clause-parser
+               sum-form-clause-parser))
+
+(add-clause-parser sum-clause-parser)
+(defclass maximize-clause (max/min-accumulation-clause) ())
+
+(defclass maximize-it-clause (maximize-clause it-mixin) ()
+  (body-form (clause end-tag)
+    `(if (null? ,*accumulation-variable*)
+         (set! ,*accumulation-variable* ,*it-var*)
+         (set! ,*accumulation-variable*
+               (,maximize ,*accumulation-variable* ,*it-var*)))))
+
+(defclass maximize-form-clause (maximize-clause form-mixin) ()
+  (body-form (clause end-tag)
+    `(if (null? ,*accumulation-variable*)
+         (set! ,*accumulation-variable* ,(clause 'form))
+         (set! ,*accumulation-variable*
+               (,maximize ,*accumulation-variable* ,(clause 'form))))))
+
+(defclass maximize-it-into-clause (into-mixin maximize-clause it-mixin) ()
+  (body-form (clause end-tag)
+    `(if (null? ,(clause 'into-var))
+         (set! ,(clause 'into-var) ,*it-var*)
+         (set! ,(clause 'into-var)
+               (,maximize ,(clause 'into-var) ,*it-var*)))))
+
+(defclass maximize-form-into-clause (into-mixin maximize-clause form-mixin) ()
+  (body-form (clause end-tag)
+    `(if (null? ,(clause 'into-var))
+         (set! ,(clause 'into-var) ,(clause 'form))
+         (set! ,(clause 'into-var)
+               (,maximize ,(clause 'into-var) ,(clause 'form))))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Parsers.
+
+(define-parser maximize-it-into-clause-parser
+  (consecutive (lambda (maximize it into var type-spec)
+                 (make-instance 'maximize-it-into-clause
+                   :into-var var
+                   :type-spec type-spec))
+               (alternative (keyword-parser 'maximize)
+                            (keyword-parser 'maximizing))
+               (keyword-parser 'it)
+               (keyword-parser 'into)
+               (singleton identity symbol?)
+               optional-type-spec-parser))
+
+(define-parser maximize-it-clause-parser
+  (consecutive (lambda (maximize it type-spec)
+                 (make-instance 'maximize-it-clause
+                   :type-spec type-spec))
+               (alternative (keyword-parser 'maximize)
+                            (keyword-parser 'maximizing))
+               (keyword-parser 'it)
+               optional-type-spec-parser))
+
+(define-parser maximize-form-into-clause-parser
+  (consecutive (lambda (maximize form into var type-spec)
+                 (make-instance 'maximize-form-into-clause
+                   :form form
+                   :into-var var
+                   :type-spec type-spec))
+               (alternative (keyword-parser 'maximize)
+                            (keyword-parser 'maximizing))
+               anything-parser
+               (keyword-parser 'into)
+               (singleton identity symbol?)
+               optional-type-spec-parser))
+
+(define-parser maximize-form-clause-parser
+  (consecutive (lambda (maximize form type-spec)
+                 (make-instance 'maximize-form-clause
+                   :form form
+                   :type-spec type-spec))
+               (alternative (keyword-parser 'maximize)
+                            (keyword-parser 'maximizing))
+               anything-parser
+               optional-type-spec-parser))
+
+(define-parser maximize-clause-parser
+  (alternative maximize-it-into-clause-parser
+               maximize-it-clause-parser
+               maximize-form-into-clause-parser
+               maximize-form-clause-parser))
+
+(add-clause-parser maximize-clause-parser)
+(defclass minimize-clause (max/min-accumulation-clause) ())
+
+(defclass minimize-it-clause (minimize-clause it-mixin) ()
+  (body-form (clause end-tag)
+    `(if (null? ,*accumulation-variable*)
+         (set! ,*accumulation-variable* ,*it-var*)
+         (set! ,*accumulation-variable*
+               (,minimize ,*accumulation-variable* ,*it-var*)))))
+
+(defclass minimize-form-clause (minimize-clause form-mixin) ()
+  (body-form (clause end-tag)
+    `(if (null? ,*accumulation-variable*)
+         (set! ,*accumulation-variable* ,(clause 'form))
+         (set! ,*accumulation-variable*
+               (,minimize ,*accumulation-variable* ,(clause 'form))))))
+
+(defclass minimize-it-into-clause (into-mixin minimize-clause it-mixin) ()
+  (body-form (clause end-tag)
+    `(if (null? ,(clause 'into-var))
+         (set! ,(clause 'into-var) ,*it-var*)
+         (set! ,(clause 'into-var)
+               (,minimize ,(clause 'into-var) ,*it-var*)))))
+
+(defclass minimize-form-into-clause (into-mixin minimize-clause form-mixin) ()
+  (body-form (clause end-tag)
+    `(if (null? ,(clause 'into-var))
+         (set! ,(clause 'into-var) ,(clause 'form))
+         (set! ,(clause 'into-var)
+               (,minimize ,(clause 'into-var) ,(clause 'form))))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Parsers.
+
+(define-parser minimize-it-into-clause-parser
+  (consecutive (lambda (minimize it into var type-spec)
+                 (make-instance 'minimize-it-into-clause
+                   :into-var var
+                   :type-spec type-spec))
+               (alternative (keyword-parser 'minimize)
+                            (keyword-parser 'minimizing))
+               (keyword-parser 'it)
+               (keyword-parser 'into)
+               (singleton identity symbol?)
+               optional-type-spec-parser))
+
+(define-parser minimize-it-clause-parser
+  (consecutive (lambda (minimize it type-spec)
+                 (make-instance 'minimize-it-clause
+                   :type-spec type-spec))
+               (alternative (keyword-parser 'minimize)
+                            (keyword-parser 'minimizing))
+               (keyword-parser 'it)
+               optional-type-spec-parser))
+
+(define-parser minimize-form-into-clause-parser
+  (consecutive (lambda (minimize form into var type-spec)
+                 (make-instance 'minimize-form-into-clause
+                   :form form
+                   :into-var var
+                   :type-spec type-spec))
+               (alternative (keyword-parser 'minimize)
+                            (keyword-parser 'minimizing))
+               anything-parser
+               (keyword-parser 'into)
+               (singleton identity symbol?)
+               optional-type-spec-parser))
+
+(define-parser minimize-form-clause-parser
+  (consecutive (lambda (minimize form type-spec)
+                 (make-instance 'minimize-form-clause
+                   :form form
+                   :type-spec type-spec))
+               (alternative (keyword-parser 'minimize)
+                            (keyword-parser 'minimizing))
+               anything-parser
+               optional-type-spec-parser))
+
+(define-parser minimize-clause-parser
+  (alternative minimize-it-into-clause-parser
+               minimize-it-clause-parser
+               minimize-form-into-clause-parser
+               minimize-form-clause-parser))
+
+(add-clause-parser minimize-clause-parser)
+(defclass conditional-clause (selectable-clause)
+  (condition then-clauses else-clauses)
+
+  ;;; A conditional clause does not introduce any bindings for any
+  ;;; variables, so this method should return the empty list.
+  (bound-variables (clause)
+    '())
+
+  (accumulation-variables (clause)
+    (append (apply append
+                    (map accumulation-variables (clause 'then-clauses)))
+            (apply append
+                    (map accumulation-variables (clause 'else-clauses)))))
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;;
+  ;;; Compute body-form.
+  
+  (body-form (clause end-tag)
+    (let-temporarily ((*it-var* (gensym)))
+      `(let ((,*it-var* ,(clause 'condition)))
+         (if ,*it-var*
+             (begin
+               ,@(map (lambda (clause)
+                           (body-form clause end-tag))
+                         (clause 'then-clauses)))
+             (begin
+               ,@(map (lambda (clause)
+                           (body-form clause end-tag))
+                         (clause 'else-clauses))))))))
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Parsers.
+
+(define-parser then-or-else-parser
+  (consecutive cons
+               selectable-clause-parser
+               (repeat* list
+                        and-selectable-clause-parser)))
+(define-parser if-else-end-clause-parser
+  (consecutive (lambda (if form then-clauses else else-clauses end)
+                 (make-instance 'conditional-clause
+                   :condition form
+                   :then-clauses then-clauses
+                   :else-clauses else-clauses))
+               (alternative (keyword-parser 'if)
+                            (keyword-parser 'when))
+               anything-parser
+               then-or-else-parser
+               (keyword-parser 'else)
+               then-or-else-parser
+               (keyword-parser 'end)))
+
+(define-parser if-end-clause-parser
+  (consecutive (lambda (if form then-clauses end)
+                 (make-instance 'conditional-clause
+                   :condition form
+                   :then-clauses then-clauses
+                   :else-clauses nil))
+               (alternative (keyword-parser 'if)
+                            (keyword-parser 'when))
+               anything-parser
+               then-or-else-parser
+               (keyword-parser 'end)))
+               
+(define-parser if-else-clause-parser
+  (consecutive (lambda (if form then-clauses else else-clauses)
+                 (make-instance 'conditional-clause
+                   :condition form
+                   :then-clauses then-clauses
+                   :else-clauses else-clauses))
+               (alternative (keyword-parser 'if)
+                            (keyword-parser 'when))
+               anything-parser
+               then-or-else-parser
+               (keyword-parser 'else)
+               then-or-else-parser))
+
+(define-parser if-clause-parser
+  (consecutive (lambda (if form then-clauses)
+                 (make-instance 'conditional-clause
+                   :condition form
+                   :then-clauses then-clauses
+                   :else-clauses nil))
+               (alternative (keyword-parser 'if)
+                            (keyword-parser 'when))
+               anything-parser
+               then-or-else-parser))
+
+(define-parser if-when-parser
+  (alternative if-else-end-clause-parser
+               if-end-clause-parser
+               if-else-clause-parser
+               if-clause-parser))
+
+(define-parser unless-else-end-clause-parser
+  (consecutive (lambda (unless form else-clauses else then-clauses end)
+                 (make-instance 'conditional-clause
+                   :condition form
+                   :then-clauses then-clauses
+                   :else-clauses else-clauses))
+               (keyword-parser 'unless)
+               anything-parser
+               then-or-else-parser
+               (keyword-parser 'else)
+               then-or-else-parser
+               (keyword-parser 'end)))
+
+(define-parser unless-end-clause-parser
+  (consecutive (lambda (unless form else-clauses end)
+                 (make-instance 'conditional-clause
+                   :condition form
+                   :then-clauses nil
+                   :else-clauses else-clauses))
+               (keyword-parser 'unless)
+               anything-parser
+               then-or-else-parser
+               (keyword-parser 'end)))
+               
+(define-parser unless-else-clause-parser
+  (consecutive (lambda (unless form else-clauses else then-clauses)
+                 (make-instance 'conditional-clause
+                   :condition form
+                   :then-clauses then-clauses
+                   :else-clauses else-clauses))
+               (keyword-parser 'unless)
+               anything-parser
+               then-or-else-parser
+               (keyword-parser 'else)
+               then-or-else-parser))
+
+(define-parser unless-clause-parser
+  (consecutive (lambda (unless form else-clauses)
+                 (make-instance 'conditional-clause
+                   :condition form
+                   :then-clauses nil
+                   :else-clauses else-clauses))
+               (alternative (keyword-parser 'unless)
+                            (keyword-parser 'when))
+               anything-parser
+               then-or-else-parser))
+
+(define-parser unless-parser
+  (alternative unless-else-end-clause-parser
+               unless-end-clause-parser
+               unless-else-clause-parser
+               unless-clause-parser))
+
+(define-parser conditional-clause-parser
+  (alternative if-when-parser
+               unless-parser))
+
+(add-clause-parser conditional-clause-parser)
+
 (defclass while-clause (termination-test-clause)
   (form)
 
@@ -1525,6 +2222,121 @@
                anything-parser))
   
 (add-clause-parser until-clause-parser)
+(defclass repeat-clause (termination-test-clause var-and-type-spec-mixin)
+  (form
+   (var-spec (gensym))
+   (type-spec 'real))
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;;
+  ;;; Compute the bindings.
+  
+  (initial-bindings (clause)
+    `((,(clause 'var-spec) ,(clause 'form))))
+  
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;;
+  ;;; Compute the declarations.
+  
+  (declarations (clause)
+    '())
+  
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;;
+  ;;; Compute the prologue-form.
+  
+  (prologue-form (clause end-tag)
+    `(when (<= ,(clause 'var-spec) 0)
+       (,end-tag)))
+  
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;;
+  ;;; Compute the termination-form.
+  
+  (termination-form (clause end-tag)
+    `(when (<= ,(clause 'var-spec) 1)
+       (,end-tag)))
+  
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;;
+  ;;; Compute the step-form.
+  
+  (step-form (clause)
+    `(set! ,(clause 'var-spec) (- ,(clause 'var-spec) 1))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Parsers.
+
+(define-parser repeat-clause-parser
+  (consecutive (lambda (repeat form)
+                 (make-instance 'repeat-clause :form form))
+               (keyword-parser 'repeat)
+               anything-parser))
+
+(add-clause-parser repeat-clause-parser)
+(defclass always-clause (termination-test-clause form-mixin) ()
+  (accumulation-variables (clause)
+    `((nil always/never t))) ;nil?
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;;
+  ;;; Compute the body-form
+  
+  (body-form (clause end-tag)
+    `(unless ,(clause 'form)
+       (,*loop-return-sym*))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Parsers.
+
+(define-parser always-clause-parser
+  (consecutive (lambda (always form)
+                 (make-instance 'always-clause
+                   :form form))
+               (keyword-parser 'always)
+               anything-parser))
+
+(add-clause-parser always-clause-parser)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Parsers.
+
+(define-parser never-clause-parser
+  (consecutive (lambda (never form)
+                 (make-instance 'always-clause
+                   :form (list not form)))
+               (keyword-parser 'never)
+               anything-parser))
+
+(add-clause-parser never-clause-parser)
+(defclass thereis-clause (termination-test-clause form-mixin) ()
+  (accumulation-variables (clause)
+    `((nil thereis t)))
+  
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;;
+  ;;; Compute the body-form
+  
+  (body-form (clause end-tag)
+    `(let ((temp ,(clause 'form)))
+       (when temp
+         (,*loop-return-sym* temp)))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Parsers.
+
+(define-parser thereis-clause-parser
+  (consecutive (lambda (thereis form)
+                 (make-instance 'thereis-clause
+                   :form form))
+               (keyword-parser 'thereis)
+               anything-parser))
+
+(add-clause-parser thereis-clause-parser)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Clause FOR-AS-CLAUSE.
@@ -2726,6 +3538,102 @@
 ;;; last.
 (add-for-as-subclause-parser for-as-equals-then-parser-2)
 (add-for-as-subclause-parser for-as-equals-then-parser-1)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Clause FOR-AS-ACROSS
+
+(defclass for-as-across (for-as-subclause var-and-type-spec-mixin)
+  (;; This slot contains a copy of the tree contained in the VAR-SPEC
+   ;; slot except that the non-NIL leaves have been replaced by
+   ;; GENSYMs.
+   temp-vars
+   ;; This slot contains a list of pairs.  Each pair is a CONS cell
+   ;; where the CAR is a variable in VAR-SPEC and the CDR is the
+   ;; corresponding variable in TEMP-VARS.
+   dictionary
+   iterator-form
+   (form-var (gensym))
+   (next-item-var (gensym)))
+
+  ;;; The FOR-AS-ACROSS clasue binds all the variables in the VAR-SPEC
+  ;;; of the clause, so this method should return a list of all those
+  ;;; variables.
+  (bound-variables (clause)
+    (map car
+         (extract-variables (clause 'var-spec) #f)))
+  
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;;
+  ;;; Compute bindings.
+  
+  (initial-bindings (clause)
+    `((,(clause 'form-var) (make-iterator ,(clause 'iterator-form)
+                                          ; if we're not destructuring, user expects unique pairs
+                                          ; but if we are, user never gets at the pairs
+                                          ; so we're free to reuse
+                                          ,@(if (pair? (clause 'var-spec))
+                                              '((cons '() '()))
+                                              '())))
+      (,(clause 'next-item-var) #<undefined>)))
+  
+  (final-bindings (clause)
+    `(,@(map (compose (rbind list #<undefined>) car) (clause 'dictionary))))
+  
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;;
+  ;;; Compute declarations.
+  
+  (declarations (clause)
+    '()) ;todo
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;;
+  ;;; Compute prologue-form.
+  
+  (prologue-form (clause end-tag)
+    `(begin (set! ,(clause 'next-item-var) (,(clause 'form-var)))
+            ,(termination-form clause end-tag)
+            ,(generate-assignments (clause 'var-spec)
+                                   (clause 'next-item-var))
+            (set! ,(clause 'next-item-var) (,(clause 'form-var)))))
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;;
+  ;;; Compute termination-form
+  
+  (termination-form (clause end-tag)
+    `(when (iterator-at-end? ,(clause 'form-var))
+       (,end-tag)))
+  
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;;
+  ;;; Compute step-form.
+  
+  (step-form (clause)
+    `(begin ,(generate-assignments (clause 'var-spec)
+                                   (clause 'next-item-var))
+            (set! ,(clause 'next-item-var) (,(clause 'form-var))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Parser
+
+(define-parser for-as-across-parser
+  (consecutive (lambda (var type-spec across iterator-form)
+                 (pidgin-destructuring-bind (temp-vars dictionary)
+                     (fresh-variables var)
+                   (make-instance 'for-as-across
+                     :var-spec var
+                     :type-spec type-spec
+                     :temp-vars temp-vars
+                     :dictionary dictionary
+                     :iterator-form iterator-form)))
+               anything-parser
+               optional-type-spec-parser
+               (keyword-parser 'across)
+               anything-parser))
+
+(add-for-as-subclause-parser for-as-across-parser)
 ;;; This function is called in a SUM clause in order to sum the
 ;;; accumulated value with the new one.
 (define (sum x y)
@@ -2735,22 +3643,26 @@
            :expected-type 'number))
   (+ x y))
 
+;;; This function is called in MAX and MIN clauses to ensure that new values
+;;; are real.
+(define (ensure-real x what)
+  (unless (real? x)
+    (error what
+           :datum x
+           :expected-type 'real))
+  x)
+
+
 ;;; This function is called in a MAX clause in order to compute the
 ;;; max of the accumulated value and the new one.
 (define (maximize x y)
-  (unless (real? y)
-    (error 'max-argument-must-be-real
-           :datum y
-           :expected-type 'real))
+  (ensure-real y 'max-argument-must-be-real)
   (max x y))
 
 ;;; This function is called in a MIN clause in order to compute the
 ;;; min of the accumulated value and the new one.
 (define (minimize x y)
-  (unless (real? y)
-    (error 'min-argument-must-be-real
-           :datum y
-           :expected-type 'real))
+  (ensure-real y 'min-argument-must-be-real)
   (min x y))
 
 ;;; This function is called during restructuring to compute the CAR of
@@ -2773,8 +3685,11 @@
              :datum x
              :expected-type 'list)))
 
-(define (last-pair x)
+(define (last x)
   (if (null? (cdr x))
     x
-    (last-pair (cdr x))))
+    (last (cdr x))))
+
+(define (copy-list x)
+  (if (null? x) '() (cons (car x) (copy-list (cdr x)))))
 (macro forms (expand-body forms))))
