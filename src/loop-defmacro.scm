@@ -36,7 +36,7 @@
                 ;"thereis-clause.scm"
                 "for-as-clause.scm"
                 "for-as-arithmetic-clause.scm"
-                ;"for-as-list-clause.scm"
+                "for-as-list-clause.scm"
                 "for-as-equals-then-clause.scm"
                 ;"for-as-across-clause.scm"
                 ;"for-as-hash-clause.scm"
