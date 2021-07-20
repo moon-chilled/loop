@@ -78,7 +78,7 @@
         `(call-with-exit
            (letrec ((,tag (lambda (return)
                             ,@loop-body
-                            (,tag))))
+                            (,tag return))))
              ,tag)))
       (let ((clauses (parse-loop-body loop-body))
             (end-tag (gensym)))

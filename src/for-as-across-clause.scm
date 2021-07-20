@@ -11,10 +11,9 @@
    ;; where the CAR is a variable in VAR-SPEC and the CDR is the
    ;; corresponding variable in TEMP-VARS.
    dictionary
-   vector-form
+   iterator-form
    (form-var (gensym))
-   (length-var (gensym))
-   (index-var (gensym)))
+   (next-item-var (gensym)))
 
   ;;; The FOR-AS-ACROSS clasue binds all the variables in the VAR-SPEC
   ;;; of the clause, so this method should return a list of all those
@@ -28,12 +27,11 @@
   ;;; Compute bindings.
   
   (initial-bindings (clause)
-    `((,(clause 'form-var) ,(clause 'vector-form))
-      (,(clause 'index-var) 0)))
+    `((,(clause 'form-var) (make-iterator ,(clause 'iterator-form) (cons '() '())))
+      (,(clause 'next-item-var) #<undefined>)))
   
   (final-bindings (clause)
-    `((,(clause 'length-var) (length ,(clause 'form-var)))
-      ,@(map (compose (rbind list #<undefined>) car) (clause 'dictionary))))
+    `(,@(map (compose (rbind list #<undefined>) car) (clause 'dictionary))))
   
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
@@ -47,18 +45,18 @@
   ;;; Compute prologue-form.
   
   (prologue-form (clause end-tag)
-    `(begin ,(termination-form clause end-tag)
+    `(begin (set! ,(clause 'next-item-var) (,(clause 'form-var)))
+            ,(termination-form clause end-tag)
             ,(generate-assignments (clause 'var-spec)
-                                   `(,(clause 'form-var)
-                                     ,(clause 'index-var)))
-            (set! ,(clause 'index-var) (+ 1 ,(clause 'index-var)))))
+                                   (clause 'next-item-var))
+            (set! ,(clause 'next-item-var) (,(clause 'form-var)))))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
   ;;; Compute termination-form
   
   (termination-form (clause end-tag)
-    `(when (>= ,(clause 'index-var) ,(clause 'length-var))
+    `(when (iterator-at-end? ,(clause 'form-var))
        (,end-tag)))
   
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -67,16 +65,15 @@
   
   (step-form (clause)
     `(begin ,(generate-assignments (clause 'var-spec)
-                                   `(,(clause 'form-var)
-                                     ,(clause 'index-var)))
-            (set! ,(clause 'index-var) (+ 1 ,(clause 'index-var))))))
+                                   (clause 'next-item-var))
+            (set! ,(clause 'next-item-var) (,(clause 'form-var))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Parser
 
 (define-parser for-as-across-parser
-  (consecutive (lambda (var type-spec across vector-form)
+  (consecutive (lambda (var type-spec across iterator-form)
                  (pidgin-destructuring-bind (temp-vars dictionary)
                      (fresh-variables var)
                    (make-instance 'for-as-across
@@ -84,7 +81,7 @@
                      :type-spec type-spec
                      :temp-vars temp-vars
                      :dictionary dictionary
-                     :vector-form vector-form)))
+                     :iterator-form iterator-form)))
                anything-parser
                optional-type-spec-parser
                (keyword-parser 'across)
