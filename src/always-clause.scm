@@ -1,6 +1,6 @@
 (defclass always-clause (termination-test-clause form-mixin) ()
   (accumulation-variables (clause)
-    `((nil always/never t))) ;nil?
+    `((#f always/never t)))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
@@ -8,7 +8,7 @@
 
   (body-form (clause end-tag)
     `(unless ,(clause 'form)
-       (,*loop-return-sym*))))
+       (,*loop-return-sym* #f))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

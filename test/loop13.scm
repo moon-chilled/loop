@@ -3,8 +3,6 @@
 ;;;; Created:  Sun Nov 17 12:37:45 2002
 ;;;; Contains: Tests of DO, DOING, RETURN in LOOP.  Tests of NAMED loops
 
-(cl:in-package :sicl-loop-test)
-
 (deftest loop.13.1
   (loop do (return 10))
   10)
@@ -37,13 +35,13 @@
   1 2)
 
 (deftest loop.13.8
-  (let* ((limit (min 1000 (1- (min call-arguments-limit
-                                   multiple-values-limit))))
-         (vals (make-list limit :initial-element :a))
-         (vals2 (multiple-value-list (eval `(loop return (values ,@vals))))))
-    (equal vals vals2))
-  t)
+  (let* ((limit 1000)
+         (vals (make-list limit :a))
+         (vals2 (list-values (eval `(loop return (values ,@vals))))))
+    (equal? vals vals2))
+  #t)
 
+#|
 (deftest loop.13.9
   (loop named foo return 'a)
   a)
@@ -430,10 +428,12 @@
     (loop named foo do (loop-finish) finally (return :good))
     :bad)
   :good)
+|#
 
 ;;; Test that explicit calls to macroexpand in subforms
 ;;; are done in the correct environment
 
+#|
 (deftest loop.13.88
   (macrolet
    ((%m (z) z))
@@ -452,3 +452,4 @@
    ((%m (z) z))
    (loop return (expand-in-current-env (%m 'a))))
   a)
+|#

@@ -40,4 +40,4 @@ Todo:
 - Collect into a lazy iterator?
 - Max/min that never executes should return -inf/inf
 - Rewrite control-flow mechanism to use call-with-exit instead of throw/catch
-- Fix loop-finish (or elide?)
+- Figure out what to do with named loops (just use the name as a return function?)

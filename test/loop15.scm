@@ -3,8 +3,6 @@
 ;;;; Created:  Thu Nov 21 07:08:21 2002
 ;;;; Contains: Tests that keywords can be loop keywords
 
-(cl:in-package :sicl-loop-test)
-
 ;;; Tests of loop keywords
 
 (deftest loop.15.30
@@ -19,15 +17,15 @@
   (loop :with x = 1 :and y = 2 :return (values x y))
   1 2)
 
-(deftest loop.15.33
-  (loop :named foo :doing (return-from foo 1))
-  1)
+;(deftest loop.15.33
+;  (loop :named foo :doing (return-from foo 1))
+;  1)
 
 (deftest loop.15.34
   (let ((x 0))
     (loop
-     :initially (setq x 2)
-     :until t
+     :initially (set! x 2)
+     :until #t
      :finally (return x)))
   2)
 
@@ -90,7 +88,7 @@
 
 (deftest loop.15.49
   (loop :for x :upfrom 1 :to 10
-        :if (evenp x) :sum x :into foo
+        :if (even? x) :sum x :into foo
         :else :sum x :into bar
         :end
         :finally (return (values foo bar)))
@@ -98,53 +96,53 @@
 
 (deftest loop.15.50
   (loop :for x :downfrom 10 :above 0
-        :when (evenp x) :sum x :into foo
+        :when (even? x) :sum x :into foo
         :else :sum x :into bar
         :end
         :finally (return (values foo bar)))
   30 25)
 
 (deftest loop.15.51
-  (loop :for x :in '(a b nil c d nil)
-        :unless x :count t)
+  (loop :for x :in '(a b #f c d #f)
+        :unless x :count #t)
   2)
 
 (deftest loop.15.52
-  (loop :for x :in '(a b nil c d nil)
-        :unless x :collect x :into bar :and :count t :into foo
+  (loop :for x :in '(a b #f c d #f)
+        :unless x :collect x :into bar :and :count #t :into foo
         :end
         finally (return (values bar foo)))
-  (nil nil)
+  (#f #f)
   2)
 
 (deftest loop.15.53
-  (loop :for x :in '(nil nil a b nil c nil)
+  (loop :for x :in '(#f #f a b #f c #f)
         :collect x
         :until x)
-  (nil nil a))
+  (#f #f a))
 
 (deftest loop.15.54
-  (loop :for x :in '(a b nil c nil)
+  (loop :for x :in '(a b #f c #f)
         :while x :collect x)
   (a b))
 
 (deftest loop.15.55
-  (loop :for x :in '(nil nil a b nil c nil)
+  (loop :for x :in '(#f #f a b #f c #f)
         :thereis x)
   a)
 
 (deftest loop.15.56
-  (loop :for x :in '(nil nil a b nil c nil)
+  (loop :for x :in '(#f #f a b #f c #f)
         :never x)
-  nil)
+  #f)
 
 (deftest loop.15.57
   (loop :for x :in '(a b c d e)
         :always x)
-  t)
+  #t)
 
 (deftest loop.15.58
-  (loop :as x :in '(a b c) :count t)
+  (loop :as x :in '(a b c) :count #t)
   3)
 
 (deftest loop.15.59
@@ -161,7 +159,7 @@
 
 (deftest loop.15.62
   (loop :for x = '(a b c) :then (cdr x)
-        :while x
+        :while (not (null? x))
         :collect (car x))
   (a b c))
 
@@ -170,80 +168,6 @@
   (a b c))
 
 (deftest loop.15.64
-  (loop :for x :being :the :hash-keys :of (make-hash-table)
-        :count t)
+  (loop :for () :across (make-hash-table)
+        :count #t)
   0)
-
-(deftest loop.15.65
-  (loop :for x :being :each :hash-key :in (make-hash-table)
-        :count t)
-  0)
-
-(deftest loop.15.66
-  (loop :for x :being :each :hash-value :of (make-hash-table)
-        :count t)
-  0)
-
-(deftest loop.15.67
-  (loop :for x :being :the :hash-values :in (make-hash-table)
-        :count t)
-  0)
-
-(deftest loop.15.68
-  (loop :for x :being :the :hash-values :in (make-hash-table)
-        :using (:hash-key k)
-        :count t)
-  0)
-
-(deftest loop.15.69
-  (loop :for x :being :the :hash-keys :in (make-hash-table)
-        :using (:hash-value v)
-        :count t)
-  0)
-
-(deftest loop.15.70
-  (let ()
-    (ignore-errors (delete-package "LOOP.15.PACKAGE"))
-    (let ((p (make-package "LOOP.15.PACKAGE" :use nil)))
-      (loop :for x :being :the :symbols :of p :count t)))
-  0)
-
-(deftest loop.15.71
-  (let ()
-    (ignore-errors (delete-package "LOOP.15.PACKAGE"))
-    (let ((p (make-package "LOOP.15.PACKAGE" :use nil)))
-      (loop :for x :being :each :symbol :of p :count t)))
-  0)
-
-(deftest loop.15.72
-  (let ()
-    (ignore-errors (delete-package "LOOP.15.PACKAGE"))
-    (let ((p (make-package "LOOP.15.PACKAGE" :use nil)))
-      (loop :for x :being :the :external-symbols :of p :count t)))
-  0)
-
-(deftest loop.15.73
-  (let ()
-    (ignore-errors (delete-package "LOOP.15.PACKAGE"))
-    (let ((p (make-package "LOOP.15.PACKAGE" :use nil)))
-      (loop :for x :being :each :external-symbol :of p :count t)))
-  0)
-
-(deftest loop.15.74
-  (let ()
-    (ignore-errors (delete-package "LOOP.15.PACKAGE"))
-    (let ((p (make-package "LOOP.15.PACKAGE" :use nil)))
-      (loop :for x :being :the :present-symbols :of p :count t)))
-  0)
-
-(deftest loop.15.75
-  (let ()
-    (ignore-errors (delete-package "LOOP.15.PACKAGE"))
-    (let ((p (make-package "LOOP.15.PACKAGE" :use nil)))
-      (loop :for x :being :each :present-symbol :of p :count t)))
-  0)
-
-
-
-
-

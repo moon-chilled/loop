@@ -7,10 +7,10 @@
                       ,*it-var*)
                 (set! ,*list-tail-accumulation-variable*
                       (,last ,*accumulation-variable*)))
-         (begin (set-cdr! ,*list-tail-accumulation-variable*
-                        ,*it-var*)
-                (set! ,*list-tail-accumulation-variable*
-                      (,last ,*list-tail-accumulation-variable*))))))
+         (begin (set! ,*list-tail-accumulation-variable*
+                      (,last ,*list-tail-accumulation-variable*))
+                (set-cdr! ,*list-tail-accumulation-variable*
+                        ,*it-var*)))))
 
 (defclass nconc-form-clause (nconc-clause form-mixin) ()
   (body-form (clause end-tag)
@@ -19,10 +19,10 @@
                       ,(clause 'form))
                 (set! ,*list-tail-accumulation-variable*
                       (,last ,*accumulation-variable*)))
-         (begin (set-cdr! ,*list-tail-accumulation-variable*
-                        ,(clause 'form))
-                (set! ,*list-tail-accumulation-variable*
-                      (,last ,*list-tail-accumulation-variable*))))))
+         (begin (set! ,*list-tail-accumulation-variable*
+                      (,last ,*list-tail-accumulation-variable*))
+                (set-cdr! ,*list-tail-accumulation-variable*
+                        ,(clause 'form))))))
 
 (defclass nconc-it-into-clause (into-mixin nconc-clause it-mixin) ()
   (body-form (clause end-tag)
@@ -31,10 +31,10 @@
                       ,*it-var*)
                 (set! ,(tail-variable (clause 'into-var))
                       (,last ,(clause 'into-var))))
-         (begin (set-cdr! ,(tail-variable (clause 'into-var))
-                        ,*it-var*)
-                (set! ,(tail-variable (clause 'into-var))
-                      (,last ,(tail-variable (clause 'into-var))))))))
+         (begin (set! ,(tail-variable (clause 'into-var))
+                      (,last ,(tail-variable (clause 'into-var))))
+                (set-cdr! ,(tail-variable (clause 'into-var))
+                        ,*it-var*)))))
 
 (defclass nconc-form-into-clause (into-mixin nconc-clause form-mixin) ()
   (body-form (clause end-tag)
@@ -43,10 +43,10 @@
                       ,(clause 'form))
                 (set! ,(tail-variable (clause 'into-var))
                       (,last ,(clause 'into-var))))
-         (begin (set-cdr! ,(tail-variable (clause 'into-var))
-                        ,(clause 'form))
-                (set! ,(tail-variable (clause 'into-var))
-                      (,last ,(tail-variable (clause 'into-var))))))))
+         (begin (set! ,(tail-variable (clause 'into-var))
+                      (,last ,(tail-variable (clause 'into-var))))
+                (set-cdr! ,(tail-variable (clause 'into-var))
+                          ,(clause 'form))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

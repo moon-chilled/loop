@@ -3,7 +3,7 @@
 (define-macro (deftest name form . results)
   (let ((x (gensym)))
     `(let ((,x (list-values ,form)))
-       (if (equivalent? ,x ',results)
+       (if (equal? ,x ',results)
          (format #t "pass ~a~%" ',name)
          (error "Test ~a failed; returned ~a but was supposed to return ~a" ',name ,x ',results)))))
 
@@ -19,10 +19,9 @@
 ;     (:no-error (&rest values) (declare (ignore values)) nil)))
 
 
-; TODO
-;(deftest loop-finish-in-simple-loop
-;    (loop do (loop (loop-finish)))
-;  '())
+(deftest loop-finish-in-simple-loop
+    (loop do (loop (loop-finish)))
+  ())
 
 (deftest loop-until-t
     (loop until #t)
@@ -91,6 +90,7 @@
     n)
   40)
 
+(load "simple-loop.scm")
 (load "loop0.scm")
 (load "loop1.scm")
 (load "loop2.scm")
@@ -100,6 +100,13 @@
 (load "loop6.scm")
 (load "loop8.scm")
 (load "loop9.scm")
+(load "loop10.scm")
+(load "loop11.scm")
+(load "loop12.scm")
+(load "loop13.scm")
+(load "loop14.scm")
+(load "loop15.scm")
+(load "loop17.scm")
 
 ; commented in sicl:
 ;; (defun loop-with-repeat-do-collect-finally ()

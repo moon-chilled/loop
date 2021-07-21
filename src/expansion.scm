@@ -19,7 +19,7 @@
         (let ((name (caar unique))
               (category (cadar unique))
               (type (caddar unique)))
-          (let ((initial-value (cond ((eq? category 'count/sum) 0) ;(coerce 0 type)
+          (let ((initial-value (cond ((eq? category 'count/sum) (car (arithmetic-value-and-type type))) ;(coerce 0 type)
                                      ((eq? category 'always/never) #t)
                                      (#t ''()))))
             (append
@@ -95,5 +95,5 @@
              (lambda (return)
                (call-with-exit
                  (lambda (,*loop-return-sym*)
-                   (let ((loop-finish (macro () (,end-tag))))
+                   (let ((loop-finish (macro () `(,',end-tag))))
                      ,(expand-clauses clauses end-tag))))))))))

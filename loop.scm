@@ -747,7 +747,7 @@
         (let ((name (caar unique))
               (category (cadar unique))
               (type (caddar unique)))
-          (let ((initial-value (cond ((eq? category 'count/sum) 0) ;(coerce 0 type)
+          (let ((initial-value (cond ((eq? category 'count/sum) (car (arithmetic-value-and-type type))) ;(coerce 0 type)
                                      ((eq? category 'always/never) #t)
                                      (#t ''()))))
             (append
@@ -823,7 +823,7 @@
              (lambda (return)
                (call-with-exit
                  (lambda (,*loop-return-sym*)
-                   (let ((loop-finish (macro () (,end-tag))))
+                   (let ((loop-finish (macro () `(,',end-tag))))
                      ,(expand-clauses clauses end-tag))))))))))
 ;;; In the dictionary entry for LOOP, the HyperSpec says:
 ;;;
@@ -1414,10 +1414,10 @@
                       (list ,*it-var*))
                 (set! ,*accumulation-variable*
                       ,*list-tail-accumulation-variable*))
-         (begin (set-cdr! ,*list-tail-accumulation-variable*
-                          (list ,*it-var*))
-                (set! ,*list-tail-accumulation-variable*
-                      (cdr ,*list-tail-accumulation-variable*)))))) ;should this be last?
+         (begin (set! ,*list-tail-accumulation-variable*
+                      (,last ,*list-tail-accumulation-variable*))
+                (set-cdr! ,*list-tail-accumulation-variable*
+                          (list ,*it-var*))))))
 
 (defclass collect-form-clause (collect-clause form-mixin)
   ()
@@ -1442,10 +1442,10 @@
                       (list ,*it-var*))
                 (set! ,(clause 'into-var)
                       ,(tail-variable (clause 'into-var))))
-         (begin (set-cdr! ,(tail-variable (clause 'into-var))
-                          (list ,*it-var*))
-                (set! ,(tail-variable (clause 'into-var))
-                      (cdr ,(tail-variable (clause 'into-var)))))))) ;ditto
+         (begin (set! ,(tail-variable (clause 'into-var))
+                      (,last ,(tail-variable (clause 'into-var))))
+                (set-cdr! ,(tail-variable (clause 'into-var))
+                          (list ,*it-var*))))))
 
 (defclass collect-form-into-clause (into-mixin collect-clause form-mixin)
   ()
@@ -1519,10 +1519,10 @@
                       (,copy-list ,*it-var*))
                 (set! ,*list-tail-accumulation-variable*
                       (,last ,*accumulation-variable*)))
-         (begin (set-cdr! ,*list-tail-accumulation-variable*
-                        (,copy-list ,*it-var*))
-                (set! ,*list-tail-accumulation-variable*
-                      (,last ,*list-tail-accumulation-variable*))))))
+         (begin (set! ,*list-tail-accumulation-variable*
+                      (,last ,*list-tail-accumulation-variable*))
+                (set-cdr! ,*list-tail-accumulation-variable*
+                        (,copy-list ,*it-var*))))))
 
 (defclass append-form-clause (append-clause form-mixin) ()
   (body-form (clause end-tag)
@@ -1531,10 +1531,10 @@
                       (,copy-list ,(clause 'form)))
                 (set! ,*list-tail-accumulation-variable*
                       (,last ,*accumulation-variable*)))
-         (begin (set-cdr! ,*list-tail-accumulation-variable*
-                        (,copy-list ,(clause 'form)))
-                (set! ,*list-tail-accumulation-variable*
-                      (,last ,*list-tail-accumulation-variable*))))))
+         (begin (set! ,*list-tail-accumulation-variable*
+                      (,last ,*list-tail-accumulation-variable*))
+                (set-cdr! ,*list-tail-accumulation-variable*
+                        (,copy-list ,(clause 'form)))))))
 
 (defclass append-it-into-clause (into-mixin append-clause it-mixin) ()
   (body-form (clause end-tag)
@@ -1543,10 +1543,10 @@
                       (,copy-list ,*it-var*))
                 (set! ,(tail-variable (clause 'into-var))
                       (,last ,(clause 'into-var))))
-         (begin (set-cdr! ,(tail-variable (clause 'into-var))
-                        (,copy-list ,*it-var*))
-                (set! ,(tail-variable (clause 'into-var))
-                      (,last ,(tail-variable (clause 'into-var))))))))
+         (begin (set! ,(tail-variable (clause 'into-var))
+                      (,last ,(tail-variable (clause 'into-var))))
+                (set-cdr! ,(tail-variable (clause 'into-var))
+                        (,copy-list ,*it-var*))))))
 
 (defclass append-form-into-clause (into-mixin append-clause form-mixin) ()
   (body-form (clause end-tag)
@@ -1555,10 +1555,10 @@
                       (,copy-list ,(clause 'form)))
                 (set! ,(tail-variable (clause 'into-var))
                       (,last ,(clause 'into-var))))
-         (begin (set-cdr! ,(tail-variable (clause 'into-var))
-                        (,copy-list ,(clause 'form)))
-                (set! ,(tail-variable (clause 'into-var))
-                      (,last ,(tail-variable (clause 'into-var))))))))
+         (begin (set! ,(tail-variable (clause 'into-var))
+                      (,last ,(tail-variable (clause 'into-var))))
+                (set-cdr! ,(tail-variable (clause 'into-var))
+                        (,copy-list ,(clause 'form)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -1624,10 +1624,10 @@
                       ,*it-var*)
                 (set! ,*list-tail-accumulation-variable*
                       (,last ,*accumulation-variable*)))
-         (begin (set-cdr! ,*list-tail-accumulation-variable*
-                        ,*it-var*)
-                (set! ,*list-tail-accumulation-variable*
-                      (,last ,*list-tail-accumulation-variable*))))))
+         (begin (set! ,*list-tail-accumulation-variable*
+                      (,last ,*list-tail-accumulation-variable*))
+                (set-cdr! ,*list-tail-accumulation-variable*
+                        ,*it-var*)))))
 
 (defclass nconc-form-clause (nconc-clause form-mixin) ()
   (body-form (clause end-tag)
@@ -1636,10 +1636,10 @@
                       ,(clause 'form))
                 (set! ,*list-tail-accumulation-variable*
                       (,last ,*accumulation-variable*)))
-         (begin (set-cdr! ,*list-tail-accumulation-variable*
-                        ,(clause 'form))
-                (set! ,*list-tail-accumulation-variable*
-                      (,last ,*list-tail-accumulation-variable*))))))
+         (begin (set! ,*list-tail-accumulation-variable*
+                      (,last ,*list-tail-accumulation-variable*))
+                (set-cdr! ,*list-tail-accumulation-variable*
+                        ,(clause 'form))))))
 
 (defclass nconc-it-into-clause (into-mixin nconc-clause it-mixin) ()
   (body-form (clause end-tag)
@@ -1648,10 +1648,10 @@
                       ,*it-var*)
                 (set! ,(tail-variable (clause 'into-var))
                       (,last ,(clause 'into-var))))
-         (begin (set-cdr! ,(tail-variable (clause 'into-var))
-                        ,*it-var*)
-                (set! ,(tail-variable (clause 'into-var))
-                      (,last ,(tail-variable (clause 'into-var))))))))
+         (begin (set! ,(tail-variable (clause 'into-var))
+                      (,last ,(tail-variable (clause 'into-var))))
+                (set-cdr! ,(tail-variable (clause 'into-var))
+                        ,*it-var*)))))
 
 (defclass nconc-form-into-clause (into-mixin nconc-clause form-mixin) ()
   (body-form (clause end-tag)
@@ -1660,10 +1660,10 @@
                       ,(clause 'form))
                 (set! ,(tail-variable (clause 'into-var))
                       (,last ,(clause 'into-var))))
-         (begin (set-cdr! ,(tail-variable (clause 'into-var))
-                        ,(clause 'form))
-                (set! ,(tail-variable (clause 'into-var))
-                      (,last ,(tail-variable (clause 'into-var))))))))
+         (begin (set! ,(tail-variable (clause 'into-var))
+                      (,last ,(tail-variable (clause 'into-var))))
+                (set-cdr! ,(tail-variable (clause 'into-var))
+                          ,(clause 'form))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -2292,7 +2292,7 @@
 (add-clause-parser repeat-clause-parser)
 (defclass always-clause (termination-test-clause form-mixin) ()
   (accumulation-variables (clause)
-    `((nil always/never t))) ;nil?
+    `((#f always/never t)))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
@@ -2300,7 +2300,7 @@
 
   (body-form (clause end-tag)
     `(unless ,(clause 'form)
-       (,*loop-return-sym*))))
+       (,*loop-return-sym* #f))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

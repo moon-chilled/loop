@@ -3,8 +3,6 @@
 ;;;; Created:  Thu Nov 21 09:48:38 2002
 ;;;; Contains: Miscellaneous loop tests
 
-(cl:in-package :sicl-loop-test)
-
 ;;; Initially and finally take multiple forms,
 ;;; and execute them in the right order
 (deftest loop.17.1
@@ -12,7 +10,7 @@
    with x = 0
    initially (incf x 1) (incf x (+ x x))
    initially (incf x (+ x x x))
-   until t
+   until #t
    finally (incf x 100) (incf x (+ x x))
    finally (return x))
   336)
@@ -20,7 +18,7 @@
 (deftest loop.17.2
   (loop
    with x = 0
-   until t
+   until #t
    initially (incf x 1) (incf x (+ x x))
    finally (incf x 100) (incf x (+ x x))
    initially (incf x (+ x x x))
@@ -32,7 +30,7 @@
     (loop
      with y = (incf x 1)
      initially (incf x 2)
-     until t
+     until #t
      finally (return (values x y))))
   3 1)
 
@@ -48,24 +46,24 @@
    finally (return 'b))
   a)
 
-(deftest loop.17.6
-  (let ((x 0))
-    (tagbody
-     (loop
-      do (go done)
-      finally (incf x))
-     done)
-    x)
-  0)
+;(deftest loop.17.6
+;  (let ((x 0))
+;    (tagbody
+;     (loop
+;      do (go done)
+;      finally (incf x))
+;     done)
+;    x)
+;  0)
 
-(deftest loop.17.7
-  (let ((x 0))
-    (catch 'done
-      (loop
-       do (throw 'done nil)
-       finally (incf x)))
-    x)
-  0)
+;(deftest loop.17.7
+;  (let ((x 0))
+;    (catch 'done
+;      (loop
+;       do (throw 'done nil)
+;       finally (incf x)))
+;    x)
+;  0)
 
 (deftest loop.17.8
   (loop
@@ -135,11 +133,11 @@
 ;;; Test that explicit calls to macroexpand in subforms
 ;;; are done in the correct environment
 
-(deftest loop.17.22
-  (macrolet
-   ((%m (z) z))
-   (loop with x = 0
-         initially (expand-in-current-env (%m (incf x)))
-         until t
-         finally (expand-in-current-env (%m (return x)))))
-  1)
+;(deftest loop.17.22
+;  (macrolet
+;   ((%m (z) z))
+;   (loop with x = 0
+;         initially (expand-in-current-env (%m (incf x)))
+;         until #t
+;         finally (expand-in-current-env (%m (return x)))))
+;  1)

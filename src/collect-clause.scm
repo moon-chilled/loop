@@ -9,10 +9,10 @@
                       (list ,*it-var*))
                 (set! ,*accumulation-variable*
                       ,*list-tail-accumulation-variable*))
-         (begin (set-cdr! ,*list-tail-accumulation-variable*
-                          (list ,*it-var*))
-                (set! ,*list-tail-accumulation-variable*
-                      (cdr ,*list-tail-accumulation-variable*)))))) ;should this be last?
+         (begin (set! ,*list-tail-accumulation-variable*
+                      (,last ,*list-tail-accumulation-variable*))
+                (set-cdr! ,*list-tail-accumulation-variable*
+                          (list ,*it-var*))))))
 
 (defclass collect-form-clause (collect-clause form-mixin)
   ()
@@ -37,10 +37,10 @@
                       (list ,*it-var*))
                 (set! ,(clause 'into-var)
                       ,(tail-variable (clause 'into-var))))
-         (begin (set-cdr! ,(tail-variable (clause 'into-var))
-                          (list ,*it-var*))
-                (set! ,(tail-variable (clause 'into-var))
-                      (cdr ,(tail-variable (clause 'into-var)))))))) ;ditto
+         (begin (set! ,(tail-variable (clause 'into-var))
+                      (,last ,(tail-variable (clause 'into-var))))
+                (set-cdr! ,(tail-variable (clause 'into-var))
+                          (list ,*it-var*))))))
 
 (defclass collect-form-into-clause (into-mixin collect-clause form-mixin)
   ()

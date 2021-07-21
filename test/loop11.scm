@@ -3,8 +3,6 @@
 ;;;; Created:  Sat Nov 16 21:39:33 2002
 ;;;; Contains: Tests for loop termination clauses REPEAT, WHILE and UNTIL
 
-(cl:in-package :sicl-loop-test)
-
 ;;; Tests of REPEAT
 
 (deftest loop.11.1
@@ -12,7 +10,7 @@
     (values
      (loop repeat 10 do (incf z))
      z))
-  nil
+  ()
   10)
 
 (deftest loop.11.2
@@ -73,7 +71,7 @@
   (1 2 3 4 5 6 7 8 9 10))
 
 (deftest loop.11.11
-  (loop with i = 0 while (if (< i 10) t (return 'good))
+  (loop with i = 0 while (if (< i 10) #t (return 'good))
         collect (incf i))
   good)
 
@@ -91,26 +89,26 @@
 
 (deftest loop.11.14
   (loop for i in '(a b c)
-        while nil
+        while #f
         collect i)
-  nil)
+  ())
 
 (deftest loop.11.15
   (loop for i in '(a b c)
         collect i
-        while nil)
+        while #f)
   (a))
 
 (deftest loop.11.16
   (loop for i in '(a b c)
-        while t
+        while #t
         collect i)
   (a b c))
 
 (deftest loop.11.17
   (loop for i in '(a b c)
         collect i
-        while t)
+        while #t)
   (a b c))
 
 (deftest loop.11.18
@@ -126,7 +124,7 @@
   (1 2 3 4 5 6 7 8 9 10))
 
 (deftest loop.11.21
-  (loop with i = 0 while (if (< i 10) t (return 'good))
+  (loop with i = 0 while (if (< i 10) #t (return 'good))
         collect (incf i))
   good)
 
@@ -144,26 +142,26 @@
 
 (deftest loop.11.24
   (loop for i in '(a b c)
-        until t
+        until #t
         collect i)
-  nil)
+  ())
 
 (deftest loop.11.25
   (loop for i in '(a b c)
         collect i
-        until t)
+        until #t)
   (a))
 
 (deftest loop.11.26
   (loop for i in '(a b c)
-        until nil
+        until #f
         collect i)
   (a b c))
 
 (deftest loop.11.27
   (loop for i in '(a b c)
         collect i
-        until nil)
+        until #f)
   (a b c))
 
 (deftest loop.11.28
@@ -175,46 +173,46 @@
 ;; More tests of a bug that showed up in c.l.l
 
 (deftest loop.11.29
-  (loop for i in '(4 8 9 A 13)
-        when (eq i 'a) return :good
+  (loop for i in '(4 8 9 a 13)
+        when (eq? i 'a) return :good
         while (< i 12) collect i)
   :good)
 
 (deftest loop.11.30
-  (loop for i in '(4 8 9 A 13)
-        unless (numberp i) return :good
+  (loop for i in '(4 8 9 a 13)
+        unless (number? i) return :good
         while (< i 12) collect i)
   :good)
 
 (deftest loop.11.31
-  (loop for i in '(4 8 9 A 13)
-        when (eq i 'a) return :good
+  (loop for i in '(4 8 9 a 13)
+        when (eq? i 'a) return :good
         until (> i 12) collect i)
   :good)
 
 (deftest loop.11.32
-  (loop for i in '(4 8 9 A 13)
-        unless (numberp i) return :good
+  (loop for i in '(4 8 9 a 13)
+        unless (number? i) return :good
         until (> i 12) collect i)
   :good)
 
 (deftest loop.11.33
-  (loop for i in '(4 8 9 A 13)
-        if (not (numberp i)) return :good end
+  (loop for i in '(4 8 9 a 13)
+        if (not (number? i)) return :good end
         while (< i 12) collect i)
   :good)
 
 (deftest loop.11.34
-  (loop for i in '(4 8 9 A 13)
-        if (not (numberp i)) return :good end
+  (loop for i in '(4 8 9 a 13)
+        if (not (number? i)) return :good end
         until (> i 12) collect i)
   :good)
 
 ;; Test that explicit calls to macroexpand in subforms
 ;; are done in the correct environment
 
-(deftest loop.11.35
-  (macrolet
-   ((%m (z) z))
-   (loop repeat (expand-in-current-env (%m 5)) collect 'x))
-  (x x x x x))
+;(deftest loop.11.35
+;  (macrolet
+;   ((%m (z) z))
+;   (loop repeat (expand-in-current-env (%m 5)) collect 'x))
+;  (x x x x x))
