@@ -19,7 +19,6 @@ additional features:
 
 Additional notes:
 
-- Error messages are not nice (yet)
 - Uninitialized values will be initialized to #<undefined> rather than nil
   (loop with x return x) #| --> #<undefined> |#
   - However, loops without an explicit result will return null.

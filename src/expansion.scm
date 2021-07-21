@@ -74,6 +74,8 @@
            ,@acc)
        ,(do-clauses all-clauses end-tag))))
 
+; consider making a dedicated 'loop error' tag and stuffing the actual data
+; into the tag so that we don't have to awkwardly rethrow other errors?
 (define-macro (augment-error-with-nice-message . body)
   `(catch #t (lambda () ,@body)
           (lambda (err rest)

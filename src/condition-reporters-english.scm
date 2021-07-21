@@ -93,8 +93,7 @@
           found))
 
 (add-error-formatter conflicting-stepping-directions ()
-  (format stream
-          "Conflicting stepping directions."))
+  (format stream "Conflicting stepping directions."))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
