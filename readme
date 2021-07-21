@@ -33,11 +33,13 @@ Additional notes:
   In this case, () is the empty (de)structure which matches everything, binds
   nothing, and places no constraints; a case where (imho) null being a special
   object rather than a symbol leads to more elegant formulations.
+- Minimize and maximize clauses that never run produce +inf.0 and -inf.0,
+  respectively.  Maximize and minimize clauses cannot affect the same
+  accumulation variable.
 
 Todo:
 
 - Collect a vector/string instead of a list
 - Collect into a lazy iterator?
-- Max/min that never executes should return -inf/inf
 - Rewrite control-flow mechanism to use call-with-exit instead of throw/catch
 - Figure out what to do with named loops (just use the name as a return function?)

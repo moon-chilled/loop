@@ -749,6 +749,8 @@
               (type (caddar unique)))
           (let ((initial-value (cond ((eq? category 'count/sum) (car (arithmetic-value-and-type type))) ;(coerce 0 type)
                                      ((eq? category 'always/never) #t)
+                                     ((eq? category 'max) -inf.0)
+                                     ((eq? category 'min) +inf.0)
                                      (#t ''()))))
             (append
               (if (not name)
@@ -989,9 +991,6 @@
 
 (defclass count/sum-accumulation-clause (numeric-accumulation-clause)
   ((accumulation-category 'count/sum)))
-
-(defclass max/min-accumulation-clause (numeric-accumulation-clause)
-  ((accumulation-category 'max/min)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -1879,35 +1878,27 @@
                sum-form-clause-parser))
 
 (add-clause-parser sum-clause-parser)
-(defclass maximize-clause (max/min-accumulation-clause) ())
+(defclass maximize-clause (numeric-accumulation-clause) ((accumulation-category 'max)))
 
 (defclass maximize-it-clause (maximize-clause it-mixin) ()
   (body-form (clause end-tag)
-    `(if (null? ,*accumulation-variable*)
-         (set! ,*accumulation-variable* (,ensure-real ,*it-var* 'max-argument-must-be-real))
-         (set! ,*accumulation-variable*
-               (,maximize ,*accumulation-variable* ,*it-var*)))))
+    `(set! ,*accumulation-variable*
+           (,maximize ,*accumulation-variable* ,*it-var*))))
 
 (defclass maximize-form-clause (maximize-clause form-mixin) ()
   (body-form (clause end-tag)
-    `(if (null? ,*accumulation-variable*)
-         (set! ,*accumulation-variable* (apply ,maximize -inf.0 (list-values ,(clause 'form))))
-         (set! ,*accumulation-variable*
-               (apply ,maximize ,*accumulation-variable* (list-values ,(clause 'form)))))))
+    `(set! ,*accumulation-variable*
+           (apply ,maximize ,*accumulation-variable* (list-values ,(clause 'form))))))
 
 (defclass maximize-it-into-clause (into-mixin maximize-clause it-mixin) ()
   (body-form (clause end-tag)
-    `(if (null? ,(clause 'into-var))
-         (set! ,(clause 'into-var) (,ensure-real ,*it-var* 'max-argument-must-be-real))
-         (set! ,(clause 'into-var)
-               (,maximize ,(clause 'into-var) ,*it-var*)))))
+    `(set! ,(clause 'into-var)
+           (,maximize ,(clause 'into-var) ,*it-var*))))
 
 (defclass maximize-form-into-clause (into-mixin maximize-clause form-mixin) ()
   (body-form (clause end-tag)
-    `(if (null? ,(clause 'into-var))
-         (set! ,(clause 'into-var) (apply ,maximize -inf.0 (list-values ,(clause 'form))))
-         (set! ,(clause 'into-var)
-               (apply ,maximize ,(clause 'into-var) (list-values ,(clause 'form)))))))
+    `(set! ,(clause 'into-var)
+           (apply ,maximize ,(clause 'into-var) (list-values ,(clause 'form))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1965,35 +1956,27 @@
                maximize-form-clause-parser))
 
 (add-clause-parser maximize-clause-parser)
-(defclass minimize-clause (max/min-accumulation-clause) ())
+(defclass minimize-clause (numeric-accumulation-clause) ((accumulation-category 'min)))
 
 (defclass minimize-it-clause (minimize-clause it-mixin) ()
   (body-form (clause end-tag)
-    `(if (null? ,*accumulation-variable*)
-         (set! ,*accumulation-variable* (,ensure-real ,*it-var* 'min-argument-must-be-real))
-         (set! ,*accumulation-variable*
-               (,minimize ,*accumulation-variable* ,*it-var*)))))
+    `(set! ,*accumulation-variable*
+          (,minimize ,*accumulation-variable* ,*it-var*))))
 
 (defclass minimize-form-clause (minimize-clause form-mixin) ()
   (body-form (clause end-tag)
-    `(if (null? ,*accumulation-variable*)
-         (set! ,*accumulation-variable* (apply ,minimize +inf.0 (list-values ,(clause 'form))))
-         (set! ,*accumulation-variable*
-               (apply ,minimize ,*accumulation-variable* (list-values ,(clause 'form)))))))
+    `(set! ,*accumulation-variable*
+          (apply ,minimize ,*accumulation-variable* (list-values ,(clause 'form))))))
 
 (defclass minimize-it-into-clause (into-mixin minimize-clause it-mixin) ()
   (body-form (clause end-tag)
-    `(if (null? ,(clause 'into-var))
-         (set! ,(clause 'into-var) (,ensure-real ,*it-var* 'min-argument-must-be-real))
-         (set! ,(clause 'into-var)
-               (,minimize ,(clause 'into-var) ,*it-var*)))))
+    `(set! ,(clause 'into-var)
+          (,minimize ,(clause 'into-var) ,*it-var*))))
 
 (defclass minimize-form-into-clause (into-mixin minimize-clause form-mixin) ()
   (body-form (clause end-tag)
-    `(if (null? ,(clause 'into-var))
-         (set! ,(clause 'into-var) (apply ,minimize +inf.0 (list-values ,(clause 'form))))
-         (set! ,(clause 'into-var)
-               (apply ,minimize ,(clause 'into-var) (list-values ,(clause 'form)))))))
+    `(set! ,(clause 'into-var)
+          (apply ,minimize ,(clause 'into-var) (list-values ,(clause 'form))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

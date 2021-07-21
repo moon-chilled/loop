@@ -54,9 +54,6 @@
 (defclass count/sum-accumulation-clause (numeric-accumulation-clause)
   ((accumulation-category 'count/sum)))
 
-(defclass max/min-accumulation-clause (numeric-accumulation-clause)
-  ((accumulation-category 'max/min)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Mixin class for INTO clause variants.

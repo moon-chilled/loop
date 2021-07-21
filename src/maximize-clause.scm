@@ -1,32 +1,24 @@
-(defclass maximize-clause (max/min-accumulation-clause) ())
+(defclass maximize-clause (numeric-accumulation-clause) ((accumulation-category 'max)))
 
 (defclass maximize-it-clause (maximize-clause it-mixin) ()
   (body-form (clause end-tag)
-    `(if (null? ,*accumulation-variable*)
-         (set! ,*accumulation-variable* (,ensure-real ,*it-var* 'max-argument-must-be-real))
-         (set! ,*accumulation-variable*
-               (,maximize ,*accumulation-variable* ,*it-var*)))))
+    `(set! ,*accumulation-variable*
+           (,maximize ,*accumulation-variable* ,*it-var*))))
 
 (defclass maximize-form-clause (maximize-clause form-mixin) ()
   (body-form (clause end-tag)
-    `(if (null? ,*accumulation-variable*)
-         (set! ,*accumulation-variable* (apply ,maximize -inf.0 (list-values ,(clause 'form))))
-         (set! ,*accumulation-variable*
-               (apply ,maximize ,*accumulation-variable* (list-values ,(clause 'form)))))))
+    `(set! ,*accumulation-variable*
+           (apply ,maximize ,*accumulation-variable* (list-values ,(clause 'form))))))
 
 (defclass maximize-it-into-clause (into-mixin maximize-clause it-mixin) ()
   (body-form (clause end-tag)
-    `(if (null? ,(clause 'into-var))
-         (set! ,(clause 'into-var) (,ensure-real ,*it-var* 'max-argument-must-be-real))
-         (set! ,(clause 'into-var)
-               (,maximize ,(clause 'into-var) ,*it-var*)))))
+    `(set! ,(clause 'into-var)
+           (,maximize ,(clause 'into-var) ,*it-var*))))
 
 (defclass maximize-form-into-clause (into-mixin maximize-clause form-mixin) ()
   (body-form (clause end-tag)
-    `(if (null? ,(clause 'into-var))
-         (set! ,(clause 'into-var) (apply ,maximize -inf.0 (list-values ,(clause 'form))))
-         (set! ,(clause 'into-var)
-               (apply ,maximize ,(clause 'into-var) (list-values ,(clause 'form)))))))
+    `(set! ,(clause 'into-var)
+           (apply ,maximize ,(clause 'into-var) (list-values ,(clause 'form))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
