@@ -57,21 +57,19 @@
         finally (return foo))
   (2 5 7 10 12 15 17 20))
 
-;(deftest loop.9.10
-;  (signals-error
-;   (loop with foo = '(a b)
-;         for x in '(c d) collect x into foo
-;         finally (return foo))
-;   program-error)
-;  t)
+(deftest loop.9.10
+  (signals-error
+   (loop with foo = '(a b)
+         for x in '(c d) collect x into foo
+         finally (return foo)))
+  #t)
 
-;(deftest loop.9.11
-;  (signals-error
-;   (loop with foo = '(a b)
-;         for x in '(c d) collecting x into foo
-;         finally (return foo))
-;   program-error)
-;  t)
+(deftest loop.9.11
+  (signals-error
+   (loop with foo = '(a b)
+         for x in '(c d) collecting x into foo
+         finally (return foo)))
+  #t)
 
 (deftest loop.9.12
   (let ((foo '(a b)))
@@ -125,21 +123,19 @@
         finally (return foo))
   (a a 1 b b 2 c c 3 d d 4))
 
-;(deftest loop.9.27
-;  (signals-error
-;   (loop with foo = '(a b)
-;         for x in '(c d) append (list x) into foo
-;         finally (return foo))
-;   program-error)
-;  t)
-;
-;(deftest loop.9.28
-;  (signals-error
-;   (loop with foo = '(a b)
-;         for x in '(c d) appending (list x) into foo
-;         finally (return foo))
-;   program-error)
-;  t)
+(deftest loop.9.27
+  (signals-error
+   (loop with foo = '(a b)
+         for x in '(c d) append (list x) into foo
+         finally (return foo)))
+  #t)
+
+(deftest loop.9.28
+  (signals-error
+   (loop with foo = '(a b)
+         for x in '(c d) appending (list x) into foo
+         finally (return foo)))
+  #t)
 
 
 ;;; NCONC, NCONCING
@@ -186,21 +182,19 @@
         finally (return foo))
   (a a 1 b b 2 c c 3 d d 4))
 
-;(deftest loop.9.37
-;  (signals-error
-;   (loop with foo = '(a b)
-;         for x in '(c d) nconc (list x) into foo
-;         finally (return foo))
-;   program-error)
-;  t)
-;
-;(deftest loop.9.38
-;  (signals-error
-;   (loop with foo = '(a b)
-;         for x in '(c d) nconcing (list x) into foo
-;         finally (return foo))
-;   program-error)
-;  t)
+(deftest loop.9.37
+  (signals-error
+   (loop with foo = '(a b)
+         for x in '(c d) nconc (list x) into foo
+         finally (return foo)))
+  #t)
+
+(deftest loop.9.38
+  (signals-error
+   (loop with foo = '(a b)
+         for x in '(c d) nconcing (list x) into foo
+         finally (return foo)))
+  #t)
 
 ;;; Combinations
 

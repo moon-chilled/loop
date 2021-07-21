@@ -134,17 +134,14 @@
 ;;; the same clause, but loop.8.error.2 binds A in two different clauses.
 ;;; I am interpreting the spec as ruling out the latter as well.
 
-; TODO
-;(deftest loop.8.error.1
-;  (signals-error
-;   (loop with a = 1
-;         and  a = 2 return a)
-;   program-error)
-;  t)
-;
-;(deftest loop.8.error.2
-;  (signals-error
-;   (loop with a = 1
-;         with a = 2 return a)
-;   program-error)
-;  t)
+(deftest loop.8.error.1
+  (signals-error
+   (loop with a = 1
+         and  a = 2 return a))
+  #t)
+
+(deftest loop.8.error.2
+  (signals-error
+   (loop with a = 1
+         with a = 2 return a))
+  #t)

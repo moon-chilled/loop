@@ -1,6 +1,6 @@
 (defclass thereis-clause (termination-test-clause form-mixin) ()
   (accumulation-variables (clause)
-    `((nil thereis t)))
+    `((#f thereis t)))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;;
