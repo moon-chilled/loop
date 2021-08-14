@@ -13,9 +13,10 @@ additional features:
 
 - Destructuring  (loop for (x y) in '((1 2) (3 4) (5 6)))
 - Keywords  (loop :for i :below 5)
-- Use of multiple values  (loop for i below 5 collect (if (< i 3) i (values i i))) #| --> (0 1 2 3 3 4 4) |#
+- Use of multiple values  (loop for i below 5 collect (if (< i 3) (values) (values i i))) #| --> (3 3 4 4) |#
 - Use arbitrary iterators with 'across'  (loop for (k . v) across (hash-table 'a 5 'b 6) collect k)
-  (For this reason, hash-keys/hash-values are elided.)
+  (For this reason, hash-keys/hash-values are elided.
+   For obvious reasons, iteration across packages is as well.)
 
 Additional notes:
 
@@ -29,9 +30,9 @@ Additional notes:
 - When destructuring, the catch-all no-bind is ().  E.G.
   (loop with (x () y) = '(1 2 3 4) return whatever)
   ←→ (let ((x 1) (y 3)) whatever)
-  In this case, () is the empty (de)structure which matches everything, binds
-  nothing, and places no constraints; a case where (imho) null being a special
-  object rather than a symbol leads to more elegant formulations.
+  In this case, () is the empty (de)structure which matches everything and
+  binds nothing, placing no constraints; a case where (imho) null being a
+  special object rather than a symbol leads to more elegant formulations.
 - Minimize and maximize clauses that never run produce +inf.0 and -inf.0,
   respectively.  Maximize and minimize clauses cannot affect the same
   accumulation variable.
