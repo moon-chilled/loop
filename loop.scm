@@ -1580,49 +1580,49 @@
   (body-form (clause end-tag)
     `(if (null? ,*list-tail-accumulation-variable*)
          (begin (set! ,*accumulation-variable*
-                      (,copy-list ,*it-var*))
+                      (,copy ,*it-var*))
                 (set! ,*list-tail-accumulation-variable*
                       (,last ,*accumulation-variable*)))
          (begin (set! ,*list-tail-accumulation-variable*
                       (,last ,*list-tail-accumulation-variable*))
                 (set-cdr! ,*list-tail-accumulation-variable*
-                        (,copy-list ,*it-var*))))))
+                        (,copy ,*it-var*))))))
 
 (defclass append-form-clause (append-clause form-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,*list-tail-accumulation-variable*)
          (begin (set! ,*accumulation-variable*
-                      (,copy-list ,(clause 'form)))
+                      (,copying-append (list-values ,(clause 'form))))
                 (set! ,*list-tail-accumulation-variable*
                       (,last ,*accumulation-variable*)))
          (begin (set! ,*list-tail-accumulation-variable*
                       (,last ,*list-tail-accumulation-variable*))
                 (set-cdr! ,*list-tail-accumulation-variable*
-                        (,copy-list ,(clause 'form)))))))
+                        (,copying-append (list-values ,(clause 'form))))))))
 
 (defclass append-it-into-clause (into-mixin append-clause it-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,(tail-variable (clause 'into-var)))
          (begin (set! ,(clause 'into-var)
-                      (,copy-list ,*it-var*))
+                      (,copy ,*it-var*))
                 (set! ,(tail-variable (clause 'into-var))
                       (,last ,(clause 'into-var))))
          (begin (set! ,(tail-variable (clause 'into-var))
                       (,last ,(tail-variable (clause 'into-var))))
                 (set-cdr! ,(tail-variable (clause 'into-var))
-                        (,copy-list ,*it-var*))))))
+                        (,copy ,*it-var*))))))
 
 (defclass append-form-into-clause (into-mixin append-clause form-mixin) ()
   (body-form (clause end-tag)
     `(if (null? ,(tail-variable (clause 'into-var)))
          (begin (set! ,(clause 'into-var)
-                      (,copy-list ,(clause 'form)))
+                      (,copying-append (list-values ,(clause 'form))))
                 (set! ,(tail-variable (clause 'into-var))
                       (,last ,(clause 'into-var))))
          (begin (set! ,(tail-variable (clause 'into-var))
                       (,last ,(tail-variable (clause 'into-var))))
                 (set-cdr! ,(tail-variable (clause 'into-var))
-                        (,copy-list ,(clause 'form)))))))
+                        (,copying-append (list ,(clause 'form))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -1697,13 +1697,13 @@
   (body-form (clause end-tag)
     `(if (null? ,*list-tail-accumulation-variable*)
          (begin (set! ,*accumulation-variable*
-                      ,(clause 'form))
+                      (,nconc (list-values ,(clause 'form))))
                 (set! ,*list-tail-accumulation-variable*
                       (,last ,*accumulation-variable*)))
          (begin (set! ,*list-tail-accumulation-variable*
                       (,last ,*list-tail-accumulation-variable*))
                 (set-cdr! ,*list-tail-accumulation-variable*
-                        ,(clause 'form))))))
+                        (,nconc (list-values ,(clause 'form))))))))
 
 (defclass nconc-it-into-clause (into-mixin nconc-clause it-mixin) ()
   (body-form (clause end-tag)
@@ -1721,13 +1721,13 @@
   (body-form (clause end-tag)
     `(if (null? ,(tail-variable (clause 'into-var)))
          (begin (set! ,(clause 'into-var)
-                      ,(clause 'form))
+                      (,nconc (list-values ,(clause 'form))))
                 (set! ,(tail-variable (clause 'into-var))
                       (,last ,(clause 'into-var))))
          (begin (set! ,(tail-variable (clause 'into-var))
                       (,last ,(tail-variable (clause 'into-var))))
                 (set-cdr! ,(tail-variable (clause 'into-var))
-                          ,(clause 'form))))))
+                          (,nconc (list-values ,(clause 'form))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -3836,11 +3836,46 @@
              :expected-type 'list)))
 
 (define (last x)
-  (if (not (pair? (cdr x)))
-    x
-    (last (cdr x))))
+  (if (null? x)
+    ()
+    (if (not (pair? (cdr x)))
+      x
+      (last (cdr x)))))
 
-(define (copy-list x)
-  (if (not (pair? x)) x (cons (car x) (copy-list (cdr x)))))
+(define (copying-append xs)
+  (if (null? xs)
+    ()
+    (let ((t (last xs)))
+      (set-car! t (copy (car t)))
+      (apply append xs))))
+
+(define (copy-and-last x)
+  (let* ((ret (list (car x)))
+         (head ret)
+         (tail (cdr x)))
+    (let loop ()
+      (if (not (pair? tail))
+        (cons ret head)
+        (begin
+          (set! head (set! (cdr head) (list (car tail))))
+          (set! tail (cdr tail)))))))
+
+(define (nconc xs)
+  (if (null? xs)
+    ()
+    (if (null? (cdr xs))
+      (car xs)
+      (let* ((ret (list ()))
+             (tail ret))
+        (let loop ((cur xs))
+          (if (null? (cdr cur))
+            (set! (cdr tail) (car cur))
+            (let ((c (car cur)))
+              (if (null? c)
+                (loop (cdr cur))
+                (let ((cl (copy-and-last c)))
+                  (set! (cdr tail) (car cl))
+                  (set! tail (cdr cl)))))))
+        (cdr ret)))))
 expand-body))
 (define-expansion (loop . forms) (loop-expand forms))

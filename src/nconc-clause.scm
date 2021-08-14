@@ -16,13 +16,13 @@
   (body-form (clause end-tag)
     `(if (null? ,*list-tail-accumulation-variable*)
          (begin (set! ,*accumulation-variable*
-                      ,(clause 'form))
+                      (,nconc (list-values ,(clause 'form))))
                 (set! ,*list-tail-accumulation-variable*
                       (,last ,*accumulation-variable*)))
          (begin (set! ,*list-tail-accumulation-variable*
                       (,last ,*list-tail-accumulation-variable*))
                 (set-cdr! ,*list-tail-accumulation-variable*
-                        ,(clause 'form))))))
+                        (,nconc (list-values ,(clause 'form))))))))
 
 (defclass nconc-it-into-clause (into-mixin nconc-clause it-mixin) ()
   (body-form (clause end-tag)
@@ -40,13 +40,13 @@
   (body-form (clause end-tag)
     `(if (null? ,(tail-variable (clause 'into-var)))
          (begin (set! ,(clause 'into-var)
-                      ,(clause 'form))
+                      (,nconc (list-values ,(clause 'form))))
                 (set! ,(tail-variable (clause 'into-var))
                       (,last ,(clause 'into-var))))
          (begin (set! ,(tail-variable (clause 'into-var))
                       (,last ,(tail-variable (clause 'into-var))))
                 (set-cdr! ,(tail-variable (clause 'into-var))
-                          ,(clause 'form))))))
+                          (,nconc (list-values ,(clause 'form))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
