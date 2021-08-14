@@ -136,12 +136,12 @@
 
 (deftest loop.8.error.1
   (signals-error
-   (loop with a = 1
+   '(loop with a = 1
          and  a = 2 return a))
   #t)
 
 (deftest loop.8.error.2
   (signals-error
-   (loop with a = 1
+   '(loop with a = 1
          with a = 2 return a))
   #t)

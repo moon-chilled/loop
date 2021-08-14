@@ -14,7 +14,7 @@
   2)
 
 (deftest loop.2.3
-  (signals-error (loop for x in '(a . b) collect x))
+  (signals-error '(loop for x in '(a . b) collect x))
   #t)
 
 (deftest loop.2.4
@@ -70,15 +70,14 @@
         collect (+ x y))
   (3 7 11))
 
-; TODO
 (deftest loop.2.14
    (signals-error 
-      (loop for x in '(a b c)
+      '(loop for x in '(a b c)
             for x in '(d e f) collect x))
    #t)
 
 (deftest loop.2.15
-  (signals-error (loop for (x . x) in '((a b) (c d)) collect x))
+  (signals-error '(loop for (x . x) in '((a b) (c d)) collect x))
   #t)
 
 (deftest loop.2.16

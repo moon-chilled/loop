@@ -59,14 +59,14 @@
 
 (deftest loop.10.9
   (signals-error
-   (loop with foo = 10
+   '(loop with foo = 10
          for x in '(a b c) count x into foo
          finally (return foo)))
   #t)
 
 (deftest loop.10.10
   (signals-error
-   (loop with foo = 10
+   '(loop with foo = 10
          for x in '(a b c) counting x into foo
          finally (return foo)))
   #t)
@@ -183,14 +183,14 @@
 
 (deftest loop.10.37
   (signals-error
-   (loop with foo = 100
+   '(loop with foo = 100
          for i from 1 to 10 maximize i into foo
          finally (return foo)))
   #t)
 
 (deftest loop.10.38
   (signals-error
-   (loop with foo = 100
+   '(loop with foo = 100
          for i from 1 to 10 maximizing i into foo
          finally (return foo)))
   #t)
@@ -285,14 +285,14 @@
 
 (deftest loop.10.57
   (signals-error
-   (loop with foo = 100
+   '(loop with foo = 100
          for i from 1 to 10 minimize i into foo
          finally (return foo)))
   #t)
 
 (deftest loop.10.58
   (signals-error
-   (loop with foo = 100
+   '(loop with foo = 100
          for i from 1 to 10 minimizing i into foo
          finally (return foo)))
   #t)
@@ -305,21 +305,21 @@
 
 (deftest loop.10.59
   (signals-error
-    (loop for i from 1 to 10
+    '(loop for i from 1 to 10
           minimize i
           maximize (- i)))
   #t)
 
 (deftest loop.10.60
   (signals-error
-    (loop for i from 1 to 10
+    '(loop for i from 1 to 10
           maximize (- i)
           minimize i))
   #t)
 
 (deftest loop.10.61
   (signals-error
-    (loop for i from 5 downto 1
+    '(loop for i from 5 downto 1
           maximize i
           minimize (- i)))
   #t)
@@ -401,14 +401,14 @@
 
 (deftest loop.10.85
   (signals-error
-   (loop with foo = 100
+   '(loop with foo = 100
          for i from 1 to 4 sum i into foo
          finally (return foo)))
   #t)
 
 (deftest loop.10.86
   (signals-error
-   (loop with foo = 100
+   '(loop with foo = 100
          for i from 1 to 4 summing i into foo
          finally (return foo)))
   #t)

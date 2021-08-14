@@ -72,12 +72,12 @@
 
 (deftest loop.3.14
   (signals-error
-    (loop for x on '(a b c)
-          for x on '(d e f) collect x))
+    '(loop for x on '(a b c)
+           for x on '(d e f) collect x))
   #t)
 
 (deftest loop.3.15
-  (signals-error (loop for (x . x) on '((a b) (c d)) collect x))
+  (signals-error '(loop for (x . x) on '((a b) (c d)) collect x))
   #t)
 
 (deftest loop.3.16

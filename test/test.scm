@@ -12,10 +12,10 @@
 (define-macro* (decf x (acc 1))
   `(set! ,x (- ,x ,acc)))
 
-(define-macro (signals-error . form)
-  `(catch #t
-          (lambda () ,@form #f)
-          (lambda (err . rest) #t)))
+(define (signals-error form)
+  (catch #t
+         (lambda () (eval form) #f)
+         (lambda (err . rest) #t)))
 
 (deftest loop-finish-in-simple-loop
     (loop do (loop (loop-finish)))

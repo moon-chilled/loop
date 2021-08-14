@@ -1,6 +1,6 @@
 ; automatically generated; do not edit
 
-(define loop (let ()
+(define loop-expand (let ()
 (define-macro (push v s)
   (unless (symbol? s) (error))
   `(begin (set! ,s (cons ,v ,s)) ,s))
@@ -3842,4 +3842,5 @@
 
 (define (copy-list x)
   (if (not (pair? x)) x (cons (car x) (copy-list (cdr x)))))
-(macro forms (expand-body forms))))
+expand-body))
+(define-expansion (loop . forms) (loop-expand forms))
