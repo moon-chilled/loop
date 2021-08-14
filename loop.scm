@@ -804,6 +804,7 @@
               (type (caddar unique)))
           (let ((initial-value (cond ((eq? category 'count/sum) (car (arithmetic-value-and-type type))) ;(coerce 0 type)
                                      ((eq? category 'always/never) #t)
+                                     ((eq? category 'thereis) #f)
                                      ((eq? category 'max) -inf.0)
                                      ((eq? category 'min) +inf.0)
                                      (#t ''()))))
