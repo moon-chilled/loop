@@ -38,23 +38,22 @@
 (define *clause* #f)
 (define (prologue-body-epilogue clauses end-tag)
   (let ((start-tag (gensym)))
-    (transform-tagbody
-        `((begin ,@(map (lambda (clause)
-                          (prologue-form clause end-tag))
-                        clauses))
-          ,start-tag
-          (begin ,@(map (lambda (clause)
-                          (body-form clause end-tag))
-                        clauses))
-          (begin ,@(map (lambda (clause)
-                          (termination-form clause end-tag))
-                        clauses))
-          (begin ,@(map step-form clauses))
-          (,start-tag)
-          ,end-tag
-          (begin ,@(map epilogue-form clauses)
-                 (,*loop-return-sym*
-                   ,*accumulation-variable*))))))
+    `(letrec ((,end-tag (lambda ()
+                          ,@(map epilogue-form clauses)
+                          (,*loop-return-sym*
+                            ,*accumulation-variable*))))
+       (letrec ((,start-tag (lambda ()
+                              ,@(map (lambda (clause)
+                                       (body-form clause end-tag))
+                                     clauses)
+                              ,@(map (lambda (clause)
+                                       (termination-form clause end-tag))
+                                     clauses)
+                              ,@(map step-form clauses)
+                              (,start-tag))))
+                ,@(map (lambda (clause)
+                         (prologue-form clause end-tag)) clauses)
+                (,start-tag)))))
 
 ;;; Process all clauses by first computing the prologue, the body, and
 ;;; the epilogue, and then applying the clause-specific wrapper for

@@ -1,5 +1,4 @@
-(define files '("tagbody.scm"
-                "primitives.scm"
+(define files '("primitives.scm"
                 "condition-reporters-english.scm"
                 "generics-and-globals.scm"
                 "utilities.scm"
