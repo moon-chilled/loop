@@ -13,18 +13,26 @@ additional features:
 
 - Destructuring  (loop for (x y) in '((1 2) (3 4) (5 6)))
 - Keywords  (loop :for i :below 5)
-- Use of multiple values  (loop for i below 5 collect (if (< i 3) (values) (values i i))) #| --> (3 3 4 4) |#
-- Use arbitrary iterators with 'across'  (loop for (k . v) across (hash-table 'a 5 'b 6) collect k)
+- Use of multiple values
+  (loop for i below 5 collect (if (< i 3) (values) (values i i)))
+  #| --> (3 3 4 4) |#
+  (In many cases this can be obviated through clever use of conditional and
+   conjunctional clauses.  For instance, the above example can be equivalently
+   written as (loop for i below 5 if (>= i 3) collect i and collect i).)
+- Use arbitrary iterators with 'across'
+  (loop for (k . v) across (hash-table 'a 5 'b 6) collect k)
   (For this reason, hash-keys/hash-values are elided.
    For obvious reasons, iteration across packages is as well.)
 
 Additional notes:
 
-- Uninitialized values will be initialized to #<undefined> rather than nil
+- Variables which are not explicitly initialized will be initialized to
+  #<undefined> rather than nil
   (loop with x return x) #| --> #<undefined> |#
   - However, loops without an explicit result will return null.
     E.G. (loop repeat 1) #| --> () |#
-- Type specifiers are parsed, but largely ignored.  The exception is the above:
+- Type specifiers are parsed, but largely ignored.  The exception is
+  uninitialized variables:
   (loop with x fixnum return x) #| --> 0 |#
   I'm not sure what more there is to do with them; suggestions welcome!
 - When destructuring, the catch-all no-bind is ().  E.G.
@@ -35,11 +43,12 @@ Additional notes:
   special object rather than a symbol leads to more elegant formulations.
 - Minimize and maximize clauses that never run produce +inf.0 and -inf.0,
   respectively.  Maximize and minimize clauses cannot affect the same
-  accumulation variable.
+  accumulation variable; hence:
+  (loop repeat 0 maximize 5)   #| --> -inf.0 |#
+  (loop minimize 0 maximize 0) #| error |#
 
 Todo:
 
 - Collect a vector/string instead of a list
 - Collect into a lazy iterator?
-- Rewrite control-flow mechanism to use call-with-exit instead of throw/catch
 - Figure out what to do with named loops (just use the name as a return function?)
