@@ -1,3 +1,4 @@
+; TODO should attempt to have some semblance of in-placeness
 (defclass select-clause (string-accumulation-clause) ())
 
 (defclass select-it-clause (select-clause it-mixin)
