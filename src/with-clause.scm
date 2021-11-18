@@ -75,8 +75,16 @@
            (vars-and-values
              (map (lambda (vt)
                     (list (car vt) (case (cadr vt)
-                                     ((fixnum) 0)
-                                     ((float) 0.0)
+                                     ((integer?) 0)
+                                     ((let?) '(inlet))
+                                     ((list?) ''())
+                                     ((hash-table?) '(make-hash-table))
+                                     ((float?) 0.0)
+                                     ((string?) "")
+                                     ((vector?) #())
+                                     ((byte-vector?) #u())
+                                     ((float-vector?) #r())
+                                     ((int-vector?) #i())
                                      (else #<undefined>))))
                   vars-and-types))) ;undefined was nil in cl
       `(let ,vars-and-values

@@ -23,6 +23,9 @@ additional features:
   (loop for (k . v) across (hash-table 'a 5 'b 6) collect k)
   (For this reason, hash-keys/hash-values are elided.
    For obvious reasons, iteration across packages is as well.)
+- The 'select' clause is similar to 'collect' or 'append', but creates strings.
+  For example: (loop for x in '(#\a "BC" #\d) select x into q select q)
+  #| --> "aaBCaBCd" |#
 
 Additional notes:
 
@@ -33,8 +36,10 @@ Additional notes:
     E.G. (loop repeat 1) #| --> () |#
 - Type specifiers are parsed, but largely ignored.  The exception is
   uninitialized variables:
-  (loop with x fixnum return x) #| --> 0 |#
+  (loop with x integer? return x) #| --> 0 |#
   I'm not sure what more there is to do with them; suggestions welcome!
+  (The full list of types supported is: integer? let? list? hash-table? float?
+   string? vector? byte-vector? float-vector? int-vector?.)
 - When destructuring, the catch-all no-bind is ().  E.G.
   (loop with (x () y) = '(1 2 3 4) return whatever)
   ←→ (let ((x 1) (y 3)) whatever)
@@ -49,6 +54,7 @@ Additional notes:
 
 Todo:
 
-- Collect a vector/string instead of a list
+- Collect a vector instead of a list with 'volita'
+- Collect major cells using 'volitas'?
 - Collect into a lazy iterator?
 - Figure out what to do with named loops (just use the name as a return function?)

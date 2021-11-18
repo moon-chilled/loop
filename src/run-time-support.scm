@@ -98,3 +98,6 @@
                   (set! (cdr tail) (car cl))
                   (set! tail (cdr cl)))))))
         (cdr ret)))))
+
+(define (string-together x . y)
+  (apply string-append x (map (lambda (x) (if (char? x) (string x) x)) y)))

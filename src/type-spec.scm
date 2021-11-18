@@ -5,7 +5,7 @@
 (define-parser simple-type-spec-parser
   (lambda (tokens)
     (if (and (not (null? tokens))
-             (member (car tokens) '(fixnum float t nil)))
+             (member (car tokens) '(integer? let? list? hash-table? float? string? vector? byte-vector? float-vector? int-vector?)))
         (list #t
                 (car tokens)
                 (cdr tokens))

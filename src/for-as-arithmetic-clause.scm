@@ -159,9 +159,9 @@
 ;;; Perhaps this code should be moved to the code utilities module.
 
 (define (arithmetic-value-and-type type-spec)
-  (cond ((eq? type-spec 'fixnum)
+  (cond ((eq? type-spec 'integer?)
          (list 0 type-spec))
-        ((eq? type-spec 'float)
+        ((eq? type-spec 'float?)
          (list 0.0 type-spec))
         ;; We could add some more here, for instance intervals
         ;; of floats.

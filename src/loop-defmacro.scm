@@ -21,6 +21,7 @@
                 "return-clause.scm"
                 "do-clause.scm"
                 "collect-clause.scm"
+                "select-clause.scm"
                 "append-clause.scm"
                 "nconc-clause.scm"
                 "count-clause.scm"

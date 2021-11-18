@@ -24,6 +24,8 @@
                                      ((eq? category 'thereis) #f)
                                      ((eq? category 'max) -inf.0)
                                      ((eq? category 'min) +inf.0)
+                                     ((eq? category 'string) "")
+                                     ((eq? category 'array) #())
                                      (#t ''()))))
             (append
               (if (not name)

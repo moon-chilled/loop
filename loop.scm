@@ -807,6 +807,8 @@
                                      ((eq? category 'thereis) #f)
                                      ((eq? category 'max) -inf.0)
                                      ((eq? category 'min) +inf.0)
+                                     ((eq? category 'string) "")
+                                     ((eq? category 'array) #())
                                      (#t ''()))))
             (append
               (if (not name)
@@ -1048,6 +1050,10 @@
    ;;; clauses, we always want to return the type LIST.
    (type-spec 'list)))
 
+(defclass string-accumulation-clause (accumulation-clause)
+  ((accumulation-category 'string)
+   (type-spec 'string)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; NUMERIC-ACCUMULATION-CLAUSE.
@@ -1105,7 +1111,7 @@
 (define-parser simple-type-spec-parser
   (lambda (tokens)
     (if (and (not (null? tokens))
-             (member (car tokens) '(fixnum float t nil)))
+             (member (car tokens) '(integer? let? list? hash-table? float? string? vector? byte-vector? float-vector? int-vector?)))
         (list #t
                 (car tokens)
                 (cdr tokens))
@@ -1302,8 +1308,16 @@
            (vars-and-values
              (map (lambda (vt)
                     (list (car vt) (case (cadr vt)
-                                     ((fixnum) 0)
-                                     ((float) 0.0)
+                                     ((integer?) 0)
+                                     ((let?) '(inlet))
+                                     ((list?) ''())
+                                     ((hash-table?) '(make-hash-table))
+                                     ((float?) 0.0)
+                                     ((string?) "")
+                                     ((vector?) #())
+                                     ((byte-vector?) #u())
+                                     ((float-vector?) #r())
+                                     ((int-vector?) #i())
                                      (else #<undefined>))))
                   vars-and-types))) ;undefined was nil in cl
       `(let ,vars-and-values
@@ -1575,6 +1589,87 @@
                collect-form-clause-parser))
 
 (add-clause-parser collect-clause-parser)
+(defclass select-clause (string-accumulation-clause) ())
+
+(defclass select-it-clause (select-clause it-mixin)
+  ()
+
+  (body-form (clause end-tag)
+    `(set! ,*accumulation-variable*
+           (,string-together ,*accumulation-variable*
+                             ,*it-var*))))
+
+(defclass select-form-clause (select-clause form-mixin)
+  ()
+
+  (body-form (clause end-tag)
+    `(set! ,*accumulation-variable*
+       (apply ,string-together ,*accumulation-variable* (list-values ,(clause 'form))))))
+
+(defclass select-it-into-clause (into-mixin select-clause it-mixin)
+  ()
+
+  (body-form (clause end-tag)
+    `(set! ,(clause 'into-var)
+           (,string-together ,(clause 'into-var)
+                             ,*it-var*))))
+
+(defclass select-form-into-clause (into-mixin select-clause form-mixin)
+  ()
+
+  (body-form (clause end-tag)
+    `(set! ,(clause 'into-var)
+           (apply ,string-together ,(clause 'into-var) (list-values ,(clause 'form))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Parsers.
+
+(define-parser select-it-into-clause-parser
+  (consecutive (lambda (select it into var)
+                 (make-instance 'select-it-into-clause
+                   :into-var var))
+               (alternative (keyword-parser 'select)
+                            (keyword-parser 'selecting))
+               (keyword-parser 'it)
+               (keyword-parser 'into)
+               (singleton identity
+                          symbol?)))
+
+(define-parser select-it-clause-parser
+  (consecutive (lambda (select it)
+                 (make-instance 'select-it-clause))
+               (alternative (keyword-parser 'select)
+                            (keyword-parser 'selecting))
+               (keyword-parser 'it)))
+
+(define-parser select-form-into-clause-parser
+  (consecutive (lambda (select form into var)
+                 (make-instance 'select-form-into-clause
+                   :form form
+                   :into-var var))
+               (alternative (keyword-parser 'select)
+                            (keyword-parser 'selecting))
+               anything-parser
+               (keyword-parser 'into)
+               (singleton identity
+                          symbol?)))
+
+(define-parser select-form-clause-parser
+  (consecutive (lambda (select form)
+                 (make-instance 'select-form-clause
+                   :form form))
+               (alternative (keyword-parser 'select)
+                            (keyword-parser 'selecting))
+               anything-parser))
+
+(define-parser select-clause-parser
+  (alternative select-it-into-clause-parser
+               select-it-clause-parser
+               select-form-into-clause-parser
+               select-form-clause-parser))
+
+(add-clause-parser select-clause-parser)
 (defclass append-clause (list-accumulation-clause) ())
 
 (defclass append-it-clause (append-clause it-mixin) ()
@@ -2704,9 +2799,9 @@
 ;;; Perhaps this code should be moved to the code utilities module.
 
 (define (arithmetic-value-and-type type-spec)
-  (cond ((eq? type-spec 'fixnum)
+  (cond ((eq? type-spec 'integer?)
          (list 0 type-spec))
-        ((eq? type-spec 'float)
+        ((eq? type-spec 'float?)
          (list 0.0 type-spec))
         ;; We could add some more here, for instance intervals
         ;; of floats.
@@ -3878,5 +3973,8 @@
                   (set! (cdr tail) (car cl))
                   (set! tail (cdr cl)))))))
         (cdr ret)))))
+
+(define (string-together x . y)
+  (apply string-append x (map (lambda (x) (if (char? x) (string x) x)) y)))
 expand-body))
 (define-expansion (loop . forms) (loop-expand forms))

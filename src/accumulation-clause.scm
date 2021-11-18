@@ -44,6 +44,10 @@
    ;;; clauses, we always want to return the type LIST.
    (type-spec 'list)))
 
+(defclass string-accumulation-clause (accumulation-clause)
+  ((accumulation-category 'string)
+   (type-spec 'string)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; NUMERIC-ACCUMULATION-CLAUSE.
